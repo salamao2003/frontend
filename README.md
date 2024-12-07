@@ -1,16 +1,39 @@
-# egy_metro
+# Egypt Metro Frontend (Flutter)
 
-A new Flutter project.
+## Overview
 
-## Getting Started
+This repository contains the **Flutter** code for the **Egypt Metro** frontend. It is responsible for rendering the user interface (UI) and handling user interactions such as trip planning, real-time train tracking, and profile management. The frontend communicates with the backend API (Django) to fetch data and provide users with an interactive and intuitive experience.
 
-This project is a starting point for a Flutter application.
+## Features
 
-A few resources to get you started if this is your first Flutter project:
+- **User Authentication**: Login and registration using secure API endpoints.
+- **Route Planner**: Allows users to choose start and end stations and view optimized routes.
+- **Real-Time Train Tracking**: Displays train locations and arrival times.
+- **Crowd Visualization**: Visualizes train car crowding based on AI predictions.
+- **User Profiles**: Supports account creation, monthly subscriptions, and student passes.
+- **Ticketing**: Generates and scans QR codes for ticketing and metro entry.
+- **Chatbot Integration**: A conversational interface for FAQs and assistance.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Prerequisites
+- Flutter (version >= 3.0)
+- Dart (version >= 2.18)
+
+### Setup
+1. Clone the repository:
+   ```
+   git clone https://github.com/egypt-metro/egypt-metro-flutter.git
+   ```
+2. Navigate to the project directory:
+   ```
+   cd egypt-metro-flutter
+   ```
+3. Install dependencies:
+   ```
+   flutter pub get
+   ```
+4. Run the app on your desired platform (Android/iOS/web):
+   ```
+    flutter run
+   ```
