@@ -12,7 +12,8 @@ class SignUpPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController nationalIdController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +23,7 @@ class SignUpPage extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
           );
+          navigateWithAnimation(context, LoginPage());
         } else if (state is AuthLogicError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.error)),
@@ -34,11 +36,12 @@ class SignUpPage extends StatelessWidget {
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [const SizedBox(height: 35),
+              children: [
+                const SizedBox(height: 35),
                 Image.asset(
-            'assets/Cairo_metro_logo.png',
-            height: 100,
-            ),
+                  'assets/Cairo_metro_logo.png',
+                  height: 100,
+                ),
                 const SizedBox(height: 35),
                 const Text(
                   "Sign up",
@@ -76,8 +79,7 @@ class SignUpPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-
-              TextField(
+                TextField(
                   controller: usernameController,
                   decoration: InputDecoration(
                     labelText: "Username",
@@ -126,15 +128,17 @@ class SignUpPage extends StatelessWidget {
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
-                    context.read<AuthLogicCubit>().onSignUpButtonPressed(
-                          firstNameController.text,
-                          lastNameController.text,
-                          usernameController.text,
-                          emailController.text,
-                          nationalIdController.text,
-                          passwordController.text,
-                          confirmPasswordController.text,
-                        );
+                    if (_validateInputs(context)) {
+                      context.read<AuthLogicCubit>().onSignUpButtonPressed(
+                            firstNameController.text.trim(),
+                            lastNameController.text.trim(),
+                            usernameController.text.trim(),
+                            emailController.text.trim(),
+                            nationalIdController.text.trim(),
+                            passwordController.text.trim(),
+                            confirmPasswordController.text.trim(),
+                          );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
@@ -162,5 +166,26 @@ class SignUpPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  bool _validateInputs(BuildContext context) {
+    if (firstNameController.text.isEmpty ||
+        lastNameController.text.isEmpty ||
+        usernameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        confirmPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("All fields are required.")),
+      );
+      return false;
+    }
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match.")),
+      );
+      return false;
+    }
+    return true;
   }
 }
