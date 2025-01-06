@@ -5,6 +5,7 @@ import 'package:egy_metro/ui/signup_page.dart';
 import '../cubit/navigation_cubit.dart';
 import '../cubit/auth_logic_cubit.dart';
 import 'package:egy_metro/ui/forget_password_page.dart';
+import 'package:egy_metro/ui/home_page.dart';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -14,12 +15,16 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AuthLogicCubit, AuthLogicState>(
       listener: (context, state) {
-        if (state is AuthLogicSuccess) {
+        if (state is AuthLogicLoading) {
+          _showLoadingDialog(context);
+        } else if (state is AuthLogicSuccess) {
+          Navigator.of(context).pop(); // Close the loading dialog
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
           );
-          // Navigate to the next page if login is successful
+          navigateWithAnimation(context, HomePage());
         } else if (state is AuthLogicError) {
+          Navigator.of(context).pop(); // Close the loading dialog
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.error)),
           );
@@ -32,6 +37,7 @@ class LoginPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                SizedBox(height: 150),
                 Image.asset(
                   'assets/Cairo_metro_logo.png',
                   height: 100,
@@ -107,6 +113,31 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent closing the dialog by tapping outside
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                const SizedBox(width: 20),
+                const Text("Loading..."),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

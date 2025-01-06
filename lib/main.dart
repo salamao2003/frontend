@@ -4,6 +4,7 @@ import 'cubit/navigation_cubit.dart';
 import 'cubit/auth_logic_cubit.dart';
 import 'ui/login_page.dart';
 import 'ui/signup_page.dart';
+import 'ui/home_page.dart';
 import 'ui/splash_screen.dart';
 
 void main() {
