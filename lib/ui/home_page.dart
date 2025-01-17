@@ -1,7 +1,11 @@
+import 'package:egy_metro/ui/Buy_Ticket_page.dart';
+import 'package:egy_metro/ui/subscribtion_page.dart';
 import 'package:flutter/material.dart';
 import 'package:egy_metro/ui/login_page.dart';
 import 'package:egy_metro/ui/animated_page_transition.dart';
-import 'package:egy_metro/ui/Lines_page.dart'; // استيراد الصفحة الجديدة
+import 'package:egy_metro/ui/Lines_page.dart'; // استيراد الصفحة 
+import 'package:egy_metro/ui/Buy_Ticket_page.dart';
+import 'package:egy_metro/ui/subscribtion_page.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -67,7 +71,7 @@ class HomePage extends StatelessWidget {
               leading: const Icon(Icons.account_balance_wallet),
               title: const Text('Wallet'),
               onTap: () {
-                Navigator.pop(context);
+               Navigator.pop(context); 
               },
             ),
             ListTile(
@@ -234,10 +238,17 @@ class HomePage extends StatelessWidget {
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
+        
         onTap: (index) {
-          if (index == 2) {
+          if (index == 1) {
             // Navigate to LinesPage
+            navigateWithAnimation(context, BuyTicketPage());
+          }
+          else if(index == 2){
             navigateWithAnimation(context, LinesPage());
+          }
+          else if(index == 3){
+            navigateWithAnimation(context,SubscriptionPage());
           }
         },
       ),

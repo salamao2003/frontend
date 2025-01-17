@@ -14,20 +14,26 @@ class LinesPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // إضافة شعار المترو أعلى الصفحة
+            // شعار المترو أعلى الصفحة
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Image.asset(
                 'assets/Cairo_metro_logo.png', // صورة شعار المترو
-                height: 80, // تعديل الارتفاع حسب الحاجة
+                height: 80,
                 fit: BoxFit.contain,
               ),
             ),
-            SizedBox(height: 20,),
+            const SizedBox(height: 20),
+            // InteractiveViewer لتكبير وتصغير صورة خطوط المترو
             Center(
-              child: Image.asset(
-                'assets/Cairo_Metro_Map.png', // صورة خطوط المترو
-                fit: BoxFit.contain,
+              child: InteractiveViewer(
+                panEnabled: true, // السماح بتحريك الصورة
+                minScale: 1.0, // الحد الأدنى للتكبير
+                maxScale: 4.0, // الحد الأقصى للتكبير
+                child: Image.asset(
+                  'assets/Cairo_Metro_Map.png', // صورة خطوط المترو
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ],
