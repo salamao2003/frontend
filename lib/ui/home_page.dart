@@ -1,13 +1,62 @@
+import 'package:egy_metro/ui/plan_page.dart';
+import 'package:flutter/material.dart';
 import 'package:egy_metro/ui/Buy_Ticket_page.dart';
 import 'package:egy_metro/ui/subscribtion_page.dart';
-import 'package:flutter/material.dart';
+import 'package:egy_metro/ui/wallet_page.dart';
 import 'package:egy_metro/ui/login_page.dart';
 import 'package:egy_metro/ui/animated_page_transition.dart';
-import 'package:egy_metro/ui/Lines_page.dart'; // استيراد الصفحة 
-import 'package:egy_metro/ui/Buy_Ticket_page.dart';
-import 'package:egy_metro/ui/subscribtion_page.dart';
+import 'package:egy_metro/ui/Lines_page.dart';
+import 'package:egy_metro/ui/My_Tickets_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // قائمة بالمحطات
+  final List<String> stations = [
+    'El-Marg El-Gedida',
+    'El-Marg',
+    'Ezbet El-Nakhl',
+    'Ain Shams',
+    'El-Matareyya',
+    'Helmeyet El-Zaitoun',
+    'Hadayeq El-Zaitoun',
+    'Saray El-Qobba',
+    'Hammamat El-Qobba',
+    'Kobri El-Qobba',
+    'Manshiet El-Sadr',
+    'El-Demerdash',
+    'Ghamra',
+    'Al-Shohadaa',
+    'Ahmed Orabi',
+    'Nasser',
+    'Sadat',
+    'Saad Zaghloul',
+    'Sayeda Zeinab',
+    'El-Malek El-Saleh',
+    'Mar Girgis',
+    'El-Zahraa',
+    'Dar El-Salam',
+    'Hadayeq El-Maadi',
+    'El-Maadi',
+    'Thakanat El-Maadi',
+    'Tora El-Balad',
+    'Kozzika',
+    'Tora El-Asmant',
+    'El-Maasara',
+    'Hadayeq Helwan',
+    'Wadi Hof',
+    'Helwan University',
+    'Ain Helwan',
+    'Helwan',
+];
+
+  // متغيرات لتخزين القيم المختارة
+  String? selectedStartStation;
+  String? selectedEndStation;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,9 +74,9 @@ class HomePage extends StatelessWidget {
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: const Icon(Icons.menu), // أيقونة القائمة (Hamburger Icon)
+              icon: const Icon(Icons.menu),
               onPressed: () {
-                Scaffold.of(context).openDrawer(); // فتح الـ Drawer
+                Scaffold.of(context).openDrawer();
               },
             );
           },
@@ -46,8 +95,8 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/Cairo_metro_logo.png', // ضع مسار الصورة هنا
-                    height: 100, // ارتفاع الشعار
+                    'assets/Cairo_metro_logo.png',
+                    height: 100,
                     fit: BoxFit.contain,
                   ),
                 ],
@@ -57,31 +106,31 @@ class HomePage extends StatelessWidget {
               leading: const Icon(Icons.account_circle),
               title: const Text('My Account'),
               onTap: () {
-                Navigator.pop(context); // يغلق القائمة
+                Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.confirmation_number),
               title: const Text('My Tickets'),
               onTap: () {
-                Navigator.pop(context); // يمكنك وضع التنقل إلى صفحة أخرى هنا
+                navigateWithAnimation(context, MyTicketsPage());
               },
             ),
             ListTile(
               leading: const Icon(Icons.account_balance_wallet),
               title: const Text('Wallet'),
               onTap: () {
-               Navigator.pop(context); 
+                navigateWithAnimation(context, WalletPage());
               },
             ),
             ListTile(
-              leading: const Icon(Icons.feedback),
-              title: const Text('Fault Reporting'),
+              leading: const Icon(Icons.headset_mic),
+              title: const Text('Chat Bot'),
               onTap: () {
                 Navigator.pop(context);
               },
             ),
-            const Divider(), // خط فاصل
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
@@ -114,26 +163,40 @@ class HomePage extends StatelessWidget {
                   children: [
                     const SizedBox(height: 16),
                     Image.asset(
-                      'assets/Cairo_metro_logo.png', // ضع صورة شعار هنا
+                      'assets/Cairo_metro_logo.png',
                       height: 80,
                     ),
                     const SizedBox(height: 16),
-                    _buildTextField(
+                    _buildDropdown(
                       context,
                       icon: Icons.directions_walk,
                       hint: "Start Station",
+                      value: selectedStartStation,
+                      onChanged: (newValue) {
+                        setState(() {
+                          selectedStartStation = newValue;
+                        });
+                      },
                     ),
-                    _buildTextField(
+                    _buildDropdown(
                       context,
                       icon: Icons.directions_walk,
                       hint: "End Station",
+                      value: selectedEndStation,
+                      onChanged: (newValue) {
+                        setState(() {
+                          selectedEndStation = newValue;
+                        });
+                      },
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton.icon(
                           onPressed: () {
-                            // Logic for Start Plan
+                            navigateWithAnimation(context, PlanPage());
+                            print('Start Station: $selectedStartStation');
+                            print('End Station: $selectedEndStation');
                           },
                           icon: const Icon(
                             Icons.search,
@@ -173,12 +236,9 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   children: [
                     const SizedBox(height: 16),
-                    Title(
-                      color: Colors.black,
-                      child: Text(
-                        "Show Nearest Station:",
-                        style: TextStyle(fontSize: 20),
-                      ),
+                    const Text(
+                      "Show Nearest Station:",
+                      style: TextStyle(fontSize: 20),
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
@@ -224,11 +284,9 @@ class HomePage extends StatelessWidget {
             icon: Icon(Icons.confirmation_number),
             label: "Buy Ticket",
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.map),
             label: "Lines",
-            backgroundColor: Colors.blue,
-            
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.paid),
@@ -238,30 +296,32 @@ class HomePage extends StatelessWidget {
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
-        
         onTap: (index) {
           if (index == 1) {
-            // Navigate to LinesPage
             navigateWithAnimation(context, BuyTicketPage());
-          }
-          else if(index == 2){
+          } else if (index == 2) {
             navigateWithAnimation(context, LinesPage());
-          }
-          else if(index == 3){
-            navigateWithAnimation(context,SubscriptionPage());
+          } else if (index == 3) {
+            navigateWithAnimation(context, SubscriptionPage());
           }
         },
       ),
     );
   }
 
-  // Helper Method to Build TextFields
-  Widget _buildTextField(BuildContext context,
-      {required IconData icon, required String hint, bool isEnabled = true}) {
+  // Helper Method to Build Dropdown
+  Widget _buildDropdown(
+    BuildContext context, {
+    required IconData icon,
+    required String hint,
+    required String? value,
+    required Function(String?) onChanged,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: TextField(
-        enabled: isEnabled,
+      child: DropdownButtonFormField<String>(
+        value: value,
+        onChanged: onChanged,
         decoration: InputDecoration(
           prefixIcon: Icon(icon),
           hintText: hint,
@@ -272,6 +332,12 @@ class HomePage extends StatelessWidget {
             borderSide: BorderSide.none,
           ),
         ),
+        items: stations.map((String station) {
+          return DropdownMenuItem<String>(
+            value: station,
+            child: Text(station),
+          );
+        }).toList(),
       ),
     );
   }

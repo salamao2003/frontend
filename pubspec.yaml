@@ -65,6 +65,9 @@ flutter:
   assets:
      - assets/Cairo_metro_logo.png
      - assets/Cairo_Metro_Map.png
+     - assets/wallet.png
+     - assets/visa.png
+     - assets/vodafone.png
      
 
   # An image asset can refer to one or more resolution-specific "variants", see
