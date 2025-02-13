@@ -1,3 +1,4 @@
+import 'package:egy_metro/ui/ChatBot_page.dart';
 import 'package:flutter/material.dart';
 import 'package:egy_metro/ui/Buy_Ticket_page.dart';
 import 'package:egy_metro/ui/subscribtion_page.dart';
@@ -19,6 +20,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   int? _selectedStartStationId;
   int? _selectedEndStationId;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -47,272 +49,426 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Egy Metro",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.blue,
-        elevation: 0,
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer(); // فتح الـ Drawer
-              },
-            );
-          },
-        ),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/Cairo_metro_logo.png', // ضع مسار الصورة هنا
-                    height: 100, // ارتفاع الشعار
-                    fit: BoxFit.contain,
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_circle),
-              title: const Text('My Account'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.confirmation_number),
-              title: const Text('My Tickets'),
-              onTap: () {
-                navigateWithAnimation(context, MyTicketsPage());
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_balance_wallet),
-              title: const Text('Wallet'),
-              onTap: () {
-                navigateWithAnimation(context, WalletPage());
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.headset_mic),
-              title: const Text('Chat Bot'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () {
-                navigateWithAnimation(context, LoginPage());
-              },
-            ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: _buildAppBar(),
+    drawer: _buildDrawer(),
+    body: Container(
+      decoration: BoxDecoration(
+         gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.blue.shade50,    // لون فاتح من الأزرق في الأعلى
+            Colors.blue.shade100,   // لون أغمق قليلاً في الأسفل
           ],
+          stops: const [0.7, 1.0],  // التحكم في توزيع التدرج
         ),
       ),
-      body: SingleChildScrollView(
+      child: SingleChildScrollView(
         child: Column(
           children: [
-            // First Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    Image.asset(
-                      'assets/Cairo_metro_logo.png', // ضع صورة شعار هنا
-                      height: 80,
-                    ),
-                    const SizedBox(height: 16),
-                    // Dropdown for Start Station
-                    _buildDropdown(
-                      hint: "Start Station",
-                      value: _selectedStartStationId,
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedStartStationId = newValue;
-                        });
-                        _homeLogic.setStartStation(newValue!);
-                      },
-                    ),
-                    // Dropdown for End Station
-                    _buildDropdown(
-                      hint: "End Station",
-                      value: _selectedEndStationId,
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedEndStationId = newValue;
-                        });
-                        _homeLogic.setEndStation(newValue!);
-                      },
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            await _homeLogic.startPlan(context);
-                          },
-                          icon: const Icon(
-                            Icons.search,
-                            color: Colors.white,
-                          ),
-                          label: const Text(
-                            "Start Plan",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              ),
-            ),
-            // Second Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                width: 300,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Show Nearest Station:",
-                      style: TextStyle(fontSize: 20),
-                    ),
-                    ElevatedButton.icon(
-                          onPressed: () {
-                            _homeLogic.findNearestStation(context);
-                          },
-                          icon: const Icon(
-                            Icons.location_on,
-                            color: Colors.white,
-                          ),
-                          label: const Text(
-                            "Nearby Station",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                          ),
-                        ),
-                    const SizedBox(height: 16),
-                    
-                  ],
-                ),
-              ),
-            ),
+            _buildPlannerCard(),
+            _buildNearbyStationCard(),
+            // مساحة إضافية في الأسفل
+            const SizedBox(height: 180),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
+    ),
+    bottomNavigationBar: _buildBottomNavigationBar(),
+  );
+}
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: const Text(
+        "Egy Metro",
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1,
+          color: Colors.white
+        ),
+      ),
+      backgroundColor: Colors.blue,
+      elevation: 0,
+      
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Colors.blue,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'assets/Cairo_metro_logo.png',
+                  height: 80,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Welcome to Egy Metro',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.confirmation_number),
-            label: "Buy Ticket",
+          _buildDrawerItem(
+            icon: Icons.account_circle,
+            title: 'My Account',
+            onTap: () => Navigator.pop(context),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: "Lines",
-            backgroundColor: Colors.blue,
+          _buildDrawerItem(
+            icon: Icons.confirmation_number,
+            title: 'My Tickets',
+            onTap: () => navigateWithAnimation(context, MyTicketsPage()),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.paid),
-            label: "Subscribtion",
+          _buildDrawerItem(
+            icon: Icons.account_balance_wallet,
+            title: 'Wallet',
+            onTap: () => navigateWithAnimation(context, WalletPage()),
+          ),
+          _buildDrawerItem(
+            icon: Icons.headset_mic,
+            title: 'Chat Bot',
+            onTap: () => navigateWithAnimation(context, ChatBotPage()),
+          ),
+          const Divider(),
+          _buildDrawerItem(
+            icon: Icons.logout,
+            title: 'Logout',
+            onTap: () => navigateWithAnimation(context, LoginPage()),
           ),
         ],
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        onTap: (index) {
-          if (index == 1) {
-            navigateWithAnimation(context, BuyTicketPage());
-          } else if (index == 2) {
-            navigateWithAnimation(context, LinesPage());
-          } else if (index == 3) {
-            navigateWithAnimation(context, SubscriptionPage());
-          }
-        },
       ),
     );
   }
 
-  // Helper Method to Build Dropdown
-  Widget _buildDropdown({
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.blue),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 16),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildPlannerCard() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          // Main Card
+          Container(
+            margin: const EdgeInsets.only(top: 40), // Space for the logo
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 5,
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 56, // Extra padding for logo overlap
+                    bottom: 16,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.route, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        "Plan Your Journey",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _buildStationSelector(
+                        icon: Icons.location_on,
+                        hint: "Start Station",
+                        value: _selectedStartStationId,
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedStartStationId = newValue;
+                          });
+                          _homeLogic.setStartStation(newValue!);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildStationSelector(
+                        icon: Icons.location_on_outlined,
+                        hint: "End Station",
+                        value: _selectedEndStationId,
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedEndStationId = newValue;
+                          });
+                          _homeLogic.setEndStation(newValue!);
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await _homeLogic.startPlan(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                "Start Plan",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Logo on top
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 40,
+              backgroundColor: Colors.white,
+              child: Image.asset(
+                'assets/Cairo_metro_logo.png',
+                height: 60,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStationSelector({
+    required IconData icon,
     required String hint,
     required int? value,
     required Function(int?)? onChanged,
   }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blue),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _stations.isEmpty
+                    ? const Text("Failed to load stations")
+                    : DropdownButton<int>(
+                        hint: Text(hint),
+                        value: value,
+                        onChanged: onChanged,
+                        isExpanded: true,
+                        underline: Container(),
+                        items: _stations
+                            .map((station) => DropdownMenuItem<int>(
+                                  value: station['id'] as int,
+                                  child: Text(station['name'].toString()),
+                                ))
+                            .toList(),
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNearbyStationCard() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _stations.isEmpty
-              ? const Center(child: Text("Failed to load stations"))
-              : DropdownButton<int>(
-                  hint: Text(hint),
-                  value: value,
-                  onChanged: onChanged,
-                  isExpanded: true,
-                  items: _stations
-                      .map((station) => DropdownMenuItem<int>(
-                            value: station['id'] as int,
-                            child: Text(station['name'].toString()),
-                          ))
-                      .toList(),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 5,
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade700,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.near_me, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text(
+                    "Find Nearest Station",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  _homeLogic.findNearestStation(context);
+                },
+                icon: const Icon(Icons.location_on,color: Colors.white,),
+                label: const Text(
+                  "Nearby Station",
+                  style: TextStyle(color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: _currentIndex,
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: Colors.blue,
+      unselectedItemColor: Colors.grey,
+      showUnselectedLabels: true,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: "Home",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.confirmation_number),
+          label: "Buy Ticket",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.map),
+          label: "Lines",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.paid),
+          label: "Subscription",
+        ),
+      ],
+      onTap: (index) {
+        setState(() {
+          _currentIndex = index;
+        });
+        if (index == 1) {
+          navigateWithAnimation(context, BuyTicketPage());
+        } else if (index == 2) {
+          navigateWithAnimation(context, LinesPage());
+        } else if (index == 3) {
+          navigateWithAnimation(context, SubscriptionPage());
+        }
+      },
     );
   }
 }
