@@ -6,7 +6,7 @@ class PlanPage extends StatelessWidget {
   final String price;
   final List<Map<String, dynamic>> route;
   final List<Map<String, dynamic>> interchanges;
-  final String startStation;  // إضافة جديدة
+  final String startStation; 
   final String endStation;
 
   const PlanPage({
@@ -15,7 +15,7 @@ class PlanPage extends StatelessWidget {
     required this.price,
     required this.route,
     required this.interchanges, 
-    required this.startStation,  // إضافة جديدة
+    required this.startStation,  
     required this.endStation,
     Key? key,
   }) : super(key: key);

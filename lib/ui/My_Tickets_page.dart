@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart'; // استيراد مكتبة gestures
-import 'buy_ticket_page.dart'; // تأكد من استيراد صفحة BuyTicketPage
+import 'package:flutter/gestures.dart'; 
+import 'buy_ticket_page.dart'; 
 import 'animated_page_transition.dart';
 class MyTicketsPage extends StatelessWidget {
   @override
@@ -25,7 +25,7 @@ class MyTicketsPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const SizedBox(height: 50),
-                  // Container الأول (الخلفية الصفراء)
+                  
                   _buildTicketContainer(
                     color: Colors.yellow,
                     ticketText: "Yellow Tickets",
@@ -37,7 +37,7 @@ class MyTicketsPage extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 20),
-                  // Container الثاني (الخلفية الخضراء)
+                  
                   _buildTicketContainer(
                     color: Colors.green,
                     ticketText: "Green Tickets",
@@ -49,7 +49,7 @@ class MyTicketsPage extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 20),
-                  // Container الثالث (الخلفية الوردية)
+                  
                   _buildTicketContainer(
                     color: Colors.pink,
                     ticketText: "Red Tickets",
@@ -64,7 +64,7 @@ class MyTicketsPage extends StatelessWidget {
               ),
             ),
           ),
-          // النص في أسفل الصفحة
+         
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: RichText(
@@ -123,7 +123,7 @@ class MyTicketsPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // اللوجو
+          
             Image.asset(
               logoPath,
               height: 50,
@@ -131,7 +131,7 @@ class MyTicketsPage extends StatelessWidget {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 10),
-            // النص الخاص بنوع التذاكر
+            
             Text(
               ticketText,
               textAlign: TextAlign.center,
@@ -142,7 +142,7 @@ class MyTicketsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            // زر View Tickets
+           
             ElevatedButton(
               onPressed: onViewTickets,
               style: ElevatedButton.styleFrom(

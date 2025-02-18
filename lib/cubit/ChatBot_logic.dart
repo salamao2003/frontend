@@ -8,7 +8,7 @@ QuickQuestion(this.question, this.answer);
 }
 
 class ChatBotLogic {
-// قائمة الأسئلة الشائعة
+
 static final List<QuickQuestion> quickQuestions = [
 QuickQuestion(
 'What are the operating hours?',
@@ -83,7 +83,7 @@ QuickQuestion('How to report a problem?',
 ),
 ];
 
-// يمكنك إضافة المزيد من المنطق هنا
+
 static String getWelcomeMessage() {
 return 'Welcome to Metro Assistant! How can I help you today?';
 }

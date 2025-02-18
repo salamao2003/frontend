@@ -162,7 +162,7 @@ Widget build(BuildContext context) {
   required IconData icon,
   required String title,
   required VoidCallback onTap,
-  bool showNewBadge = false, // إضافة متغير للتحكم في ظهور علامة New
+  bool showNewBadge = false,  
 }) {
   return ListTile(
     leading: Icon(icon, color: Colors.blue),
@@ -172,7 +172,7 @@ Widget build(BuildContext context) {
           title,
           style: const TextStyle(fontSize: 16),
         ),
-        if (title == 'Chat Bot') ... [ // إظهار علامة New فقط مع Chat Bot
+        if (title == 'Chat Bot') ... [ 
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -208,7 +208,7 @@ Widget build(BuildContext context) {
         children: [
           // Main Card
           Container(
-            margin: const EdgeInsets.only(top: 40), // Space for the logo
+            margin: const EdgeInsets.only(top: 40), 
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -227,7 +227,7 @@ Widget build(BuildContext context) {
                   padding: const EdgeInsets.only(
                     left: 16,
                     right: 16,
-                    top: 56, // Extra padding for logo overlap
+                    top: 56, 
                     bottom: 16,
                   ),
                   decoration: const BoxDecoration(

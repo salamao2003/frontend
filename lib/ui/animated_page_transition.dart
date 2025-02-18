@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Navigate to the next page with a smooth slide animation.
+
 void navigateWithAnimation(BuildContext context, Widget page) {
   Navigator.of(context).push(PageRouteBuilder(
     pageBuilder: (context, animation, secondaryAnimation) => page,

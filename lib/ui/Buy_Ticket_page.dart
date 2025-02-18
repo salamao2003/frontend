@@ -143,7 +143,7 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Title and Subtitle
+                      
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

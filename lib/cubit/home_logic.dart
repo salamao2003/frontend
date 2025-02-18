@@ -161,8 +161,8 @@ class HomeLogic {
               stations: data['total_stations'].toString(),
               price: data['price'].toString(),
               route: List<Map<String, dynamic>>.from(data['route']),
-              interchanges: List<Map<String, dynamic>>.from(data['interchanges']), // إضافة route
-              startStation: data['start_station'], // إضافة محطة البداية
+              interchanges: List<Map<String, dynamic>>.from(data['interchanges']), 
+              startStation: data['start_station'], 
         endStation: data['end_station'], 
             ),
           );
@@ -188,7 +188,7 @@ class HomeLogic {
     _showLoadingDialog(context, message: 'Searching for nearest station...');
 
     try {
-      // 1. التحقق من إذن الموقع
+   
       var status = await Permission.location.request();
       print('Location permission status: $status');
       if (status.isDenied) {
@@ -203,8 +203,7 @@ class HomeLogic {
         await openAppSettings();
         return;
       }
-      // 2. التحقق من تفعيل خدمة الموقع
-
+      
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       print('Location service enabled: $serviceEnabled');
       if (!serviceEnabled) {
@@ -214,19 +213,19 @@ class HomeLogic {
         );
         return;
       }
-      // 3. الحصول على الموقع الحالي
+      
       print('Getting current position...');
       final Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
       print('Position obtained - Latitude: ${position.latitude}, Longitude: ${position.longitude}');
 
-      // 4. الحصول على أقرب محطة
+      
       if (context.mounted) {
         await getNearestStation(position.latitude, position.longitude, context);
       }
 
-      // 5. إغلاق شاشة التحميل
+      
       if (context.mounted) {
         Navigator.pop(context);
       }
@@ -235,11 +234,11 @@ class HomeLogic {
       _handleError(context, 'Error: ${e.toString()}');
     }
   }
-  // دالة مساعدة للتعامل مع الأخطاء
+  
 
   void _handleError(BuildContext context, String message) {
     if (context.mounted) {
-      Navigator.pop(context); // إغلاق شاشة التحميل
+      Navigator.pop(context); 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),

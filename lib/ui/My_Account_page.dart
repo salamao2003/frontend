@@ -6,7 +6,7 @@ class MyAccountPage extends StatefulWidget {
 }
 
 class _MyAccountPageState extends State<MyAccountPage> {
-  // Sample user data - replace with actual user data
+  
   String firstName = "John";
   String lastName = "Doe";
   String email = "john.doe@example.com";
