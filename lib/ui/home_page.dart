@@ -7,6 +7,7 @@ import 'package:egy_metro/ui/login_page.dart';
 import 'package:egy_metro/ui/animated_page_transition.dart';
 import 'package:egy_metro/ui/Lines_page.dart';
 import 'package:egy_metro/ui/My_Tickets_page.dart';
+import 'package:egy_metro/ui/My_Account_page.dart';
 import 'package:egy_metro/cubit/home_logic.dart';
 
 class HomePage extends StatefulWidget {
@@ -59,10 +60,10 @@ Widget build(BuildContext context) {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.blue.shade50,    // لون فاتح من الأزرق في الأعلى
-            Colors.blue.shade100,   // لون أغمق قليلاً في الأسفل
+            Colors.blue.shade50,   
+            Colors.blue.shade100,  
           ],
-          stops: const [0.7, 1.0],  // التحكم في توزيع التدرج
+          stops: const [0.7, 1.0],  
         ),
       ),
       child: SingleChildScrollView(
@@ -70,7 +71,7 @@ Widget build(BuildContext context) {
           children: [
             _buildPlannerCard(),
             _buildNearbyStationCard(),
-            // مساحة إضافية في الأسفل
+            
             const SizedBox(height: 180),
           ],
         ),
@@ -129,7 +130,7 @@ Widget build(BuildContext context) {
           _buildDrawerItem(
             icon: Icons.account_circle,
             title: 'My Account',
-            onTap: () => Navigator.pop(context),
+            onTap: () => navigateWithAnimation(context, MyAccountPage()),
           ),
           _buildDrawerItem(
             icon: Icons.confirmation_number,
@@ -157,20 +158,47 @@ Widget build(BuildContext context) {
     );
   }
 
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.blue),
-      title: Text(
-        title,
-        style: const TextStyle(fontSize: 16),
-      ),
-      onTap: onTap,
-    );
-  }
+ Widget _buildDrawerItem({
+  required IconData icon,
+  required String title,
+  required VoidCallback onTap,
+  bool showNewBadge = false, // إضافة متغير للتحكم في ظهور علامة New
+}) {
+  return ListTile(
+    leading: Icon(icon, color: Colors.blue),
+    title: Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16),
+        ),
+        if (title == 'Chat Bot') ... [ // إظهار علامة New فقط مع Chat Bot
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.purple.shade300,
+                width: 1,
+              ),
+            ),
+            child: const Text(
+              'New',
+              style: TextStyle(
+                color: Colors.purple,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ],
+    ),
+    onTap: onTap,
+  );
+}
 
   Widget _buildPlannerCard() {
     return Padding(

@@ -70,37 +70,6 @@ class HomeLogic {
     );
   }
 
-  // Handle location permission method
-  Future<bool> _handleLocationPermission(BuildContext context) async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Location services are disabled. Please enable them')));
-      return false;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permissions are denied')));
-        return false;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Location permissions are permanently denied')));
-      return false;
-    }
-
-    return true;
-  }
-
   // Get nearest station method
   Future<void> getNearestStation(double lat, double lng, BuildContext context) async {
     try {
@@ -188,9 +157,13 @@ class HomeLogic {
           navigateWithAnimation(
             context,
             PlanPage(
-              time: data['estimated_travel_time'].toString(),
-              stations: data['number_of_stations'].toString(),
-              price: data['ticket_price'].toString(),
+              time: data['estimated_time'].toString(),
+              stations: data['total_stations'].toString(),
+              price: data['price'].toString(),
+              route: List<Map<String, dynamic>>.from(data['route']),
+              interchanges: List<Map<String, dynamic>>.from(data['interchanges']), // إضافة route
+              startStation: data['start_station'], // إضافة محطة البداية
+        endStation: data['end_station'], 
             ),
           );
         }
@@ -209,75 +182,71 @@ class HomeLogic {
       }
     }
   }
-
   // Find nearest station method
   Future<void> findNearestStation(BuildContext context) async {
     print('Starting findNearestStation...');
     _showLoadingDialog(context, message: 'Searching for nearest station...');
 
     try {
+      // 1. التحقق من إذن الموقع
       var status = await Permission.location.request();
       print('Location permission status: $status');
-
       if (status.isDenied) {
-        if (context.mounted) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please allow access to location')),
-          );
-        }
+        _handleError(context, 'Please allow access to location');
         return;
       }
-
       if (status.isPermanentlyDenied) {
-        if (context.mounted) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please enable location permission from app settings'),
-            ),
-          );
-        }
+        _handleError(
+          context, 
+          'Please enable location permission from app settings'
+        );
         await openAppSettings();
         return;
       }
+      // 2. التحقق من تفعيل خدمة الموقع
 
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       print('Location service enabled: $serviceEnabled');
-
       if (!serviceEnabled) {
-        if (context.mounted) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please enable location services in device settings')),
-          );
-        }
+        _handleError(
+          context, 
+          'Please enable location services in device settings'
+        );
         return;
       }
-
+      // 3. الحصول على الموقع الحالي
       print('Getting current position...');
       final Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-
       print('Position obtained - Latitude: ${position.latitude}, Longitude: ${position.longitude}');
 
+      // 4. الحصول على أقرب محطة
       if (context.mounted) {
         await getNearestStation(position.latitude, position.longitude, context);
       }
 
+      // 5. إغلاق شاشة التحميل
       if (context.mounted) {
         Navigator.pop(context);
       }
-
     } catch (e) {
       print('Error in findNearestStation: $e');
-      if (context.mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
-      }
+      _handleError(context, 'Error: ${e.toString()}');
+    }
+  }
+  // دالة مساعدة للتعامل مع الأخطاء
+
+  void _handleError(BuildContext context, String message) {
+    if (context.mounted) {
+      Navigator.pop(context); // إغلاق شاشة التحميل
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }

@@ -15,195 +15,315 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Buy your tickets now !",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          "Buy Tickets",
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,color: Colors.white
+          ),
         ),
         backgroundColor: Colors.blue,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(15),
+            bottomRight: Radius.circular(15),
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const SizedBox(height: 50),
-            // Container الأول (الخلفية الصفراء)
-            _buildTicketContainer(
-              color: Colors.yellow,
-              ticketCount: _ticketCountFirst,
-              onIncrease: () {
-                setState(() {
-                  _ticketCountFirst++;
-                });
-              },
-              onDecrease: () {
-                setState(() {
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.blue.shade50,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  "Select Your Ticket",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildTicketCard(
+                title: "Basic Ticket",
+                subtitle: "Up to 9 stations",
+                price: "8",
+                color: Colors.yellow.shade600,
+                ticketCount: _ticketCountFirst,
+                onIncrease: () => setState(() => _ticketCountFirst++),
+                onDecrease: () => setState(() {
                   if (_ticketCountFirst > 1) _ticketCountFirst--;
-                });
-              },
-              priceText: "Price: 8 EGP",
-              noStations: "Up to 9 stations",
-              priceTextColor: Colors.black,
-              noStationsColor: Colors.black,
-              logoPath: 'assets/Cairo_metro_logo.png',
-            ),
-            const SizedBox(height: 20),
-            // Container الثاني (الخلفية الخضراء)
-            _buildTicketContainer(
-              color: Colors.green,
-              ticketCount: _ticketCountSecond,
-              onIncrease: () {
-                setState(() {
-                  _ticketCountSecond++;
-                });
-              },
-              onDecrease: () {
-                setState(() {
+                }),
+                isPopular: false,
+              ),
+              _buildTicketCard(
+                title: "Standard Ticket",
+                subtitle: "Up to 16 stations",
+                price: "10",
+                color: Colors.green,
+                ticketCount: _ticketCountSecond,
+                onIncrease: () => setState(() => _ticketCountSecond++),
+                onDecrease: () => setState(() {
                   if (_ticketCountSecond > 1) _ticketCountSecond--;
-                });
-              },
-              priceText: "Price: 10 EGP",
-              noStations: "Up to 16 stations",
-              priceTextColor: Colors.black,
-              noStationsColor: Colors.black,
-              logoPath: 'assets/Cairo_metro_logo.png',
-            ),
-            const SizedBox(height: 20),
-            // Container الثالث (الخلفية الوردية)
-            _buildTicketContainer(
-              color: Colors.pink,
-              ticketCount: _ticketCountThird,
-              onIncrease: () {
-                setState(() {
-                  _ticketCountThird++;
-                });
-              },
-              onDecrease: () {
-                setState(() {
+                }),
+                isPopular: true,
+              ),
+              _buildTicketCard(
+                title: "Premium Ticket",
+                subtitle: "Up to 23 stations",
+                price: "15",
+                color: Colors.red,
+                ticketCount: _ticketCountThird,
+                onIncrease: () => setState(() => _ticketCountThird++),
+                onDecrease: () => setState(() {
                   if (_ticketCountThird > 1) _ticketCountThird--;
-                });
-              },
-              priceText: "Price: 15 EGP",
-              noStations: "Up to 23 stations",
-              priceTextColor: Colors.black,
-              noStationsColor: Colors.black,
-              logoPath: 'assets/Cairo_metro_logo.png',
-            ),
-          ],
+                }),
+                isPopular: false,
+              ),
+              const SizedBox(height: 80),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  Widget _buildTicketContainer({
+    Widget _buildTicketCard({
+    required String title,
+    required String subtitle,
+    required String price,
     required Color color,
     required int ticketCount,
     required VoidCallback onIncrease,
     required VoidCallback onDecrease,
-    required String priceText,
-    required String noStations,
-    required Color priceTextColor,
-    required Color noStationsColor,
-    required String logoPath, // مسار الصورة
+    required bool isPopular,
   }) {
-    return Center(
-      child: Container(
-        width: 250,
-        height: 240, // زيادة الطول لاستيعاب الصورة
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // اللوجو
-            Image.asset(
-              logoPath,
-              height: 50,
-              width: 50,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 10),
-            // نص السعر
-            Text(
-              priceText,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: priceTextColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            // نص عدد المحطات
-            Text(
-              noStations,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: noStationsColor,
-              ),
-            ),
-            const SizedBox(height: 16),
-            // العداد وزر الشراء
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // عداد التذاكر
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: onDecrease,
-                      icon: const Icon(Icons.remove, color: Colors.black),
-                    ),
-                    Text(
-                      '$ticketCount',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: onIncrease,
-                      icon: const Icon(Icons.add, color: Colors.black),
-                    ),
-                  ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-                // زر الشراء
-                ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("You purchased $ticketCount tickets!"),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 20),
-                  ),
-                  child: const Text(
-                    "Buy",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
+              ],
+            ),
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.9),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Title and Subtitle
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              subtitle,
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Price
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                price,
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const Text(
+                                " EGP",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Text(
+                            "per ticket",
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Counter and Buy Button
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Counter
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              onPressed: onDecrease,
+                              icon: const Icon(Icons.remove),
+                              color: Colors.blue,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                '$ticketCount',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: onIncrease,
+                              icon: const Icon(Icons.add),
+                              color: Colors.blue,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Buy Button
+                      ElevatedButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                "You purchased $ticketCount ${title.toLowerCase()}(s)!",
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: color,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: color,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.shopping_cart_outlined,color: Colors.white,),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Buy Now",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: color == Colors.yellow.shade100
+                                    ? Colors.black87
+                                    : Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          if (isPopular)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.star,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      "POPULAR",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

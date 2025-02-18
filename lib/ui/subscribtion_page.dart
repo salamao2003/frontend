@@ -9,128 +9,251 @@ class SubscriptionPage extends StatelessWidget {
           "Subscription Plans",
           style: TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+            fontWeight: FontWeight.bold,color: Colors.white
           ),
         ),
         backgroundColor: Colors.blue,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(15),
+            bottomRight: Radius.circular(15),
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            // Container الأول - اللون الأحمر
-            _buildColoredContainer(
-              color: Colors.red,
-              text: "Plan 1 : One Region",
-              price: "Price: 310/month",
-              logoPath: 'assets/Cairo_metro_logo.png',
-            ),
-            const SizedBox(height: 20),
-            // Container الثاني - اللون الرمادي
-            _buildColoredContainer(
-              color: Colors.grey,
-              text: "Plan 2 : Two Regions",
-              price: "Price: 365/month",
-              logoPath: 'assets/Cairo_metro_logo.png',
-            ),
-            const SizedBox(height: 20),
-            // Container الثالث - اللون البرتقالي
-            _buildColoredContainer(
-              color: Colors.orange,
-              text: "Plan 3 : 3 or 4 Regions",
-              price: "Price: 425/month",
-              logoPath: 'assets/Cairo_metro_logo.png',
-            ),
-            const SizedBox(height: 20),
-            // Container الرابع - اللون الأزرق
-            _buildColoredContainer(
-              color: Colors.purple,
-              text: "Plan 4 : 5 or 6 Regions",
-              price: "Price: 600/month",
-              logoPath: 'assets/Cairo_metro_logo.png',
-            ),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.blue.shade50,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  "Choose Your Plan",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildSubscriptionCard(
+                title: "Basic Plan",
+                subtitle: "One Region",
+                price: "310",
+                features: ["Access to one region", "Monthly renewal", ],
+                color: Colors.blue,
+                isPopular: false,
+              ),
+              _buildSubscriptionCard(
+                title: "Standard Plan",
+                subtitle: "Two Regions",
+                price: "365",
+                features: ["Access to two regions", "Monthly renewal", ],
+                color: Colors.purple,
+                isPopular: true,
+              ),
+              _buildSubscriptionCard(
+                title: "Premium Plan",
+                subtitle: "3 or 4 Regions",
+                price: "425",
+                features: ["Access to 3-4 regions", "Monthly renewal", ],
+                color: Colors.orange,
+                isPopular: false,
+              ),
+              _buildSubscriptionCard(
+                title: "Ultimate Plan",
+                subtitle: "5 or 6 Regions",
+                price: "600",
+                features: ["Access to all regions", "Monthly renewal", ],
+                color: Colors.green,
+                isPopular: false,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // دالة لإنشاء Container مخصص مع شعار ونصوص وزر
-  Widget _buildColoredContainer({
-    required Color color,
-    required String text,
+  Widget _buildSubscriptionCard({
+    required String title,
+    required String subtitle,
     required String price,
-    required String logoPath,
+    required List<String> features,
+    required Color color,
+    required bool isPopular,
   }) {
-    return Center(
-      child: Container(
-        width: 250,
-        height: 250, // زودنا الطول لاستيعاب الزر
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(20), // زوايا مستديرة
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: Offset(0, 4), // تأثير الظل
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.1),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // الشعار
-            Image.asset(
-              logoPath,
-              height: 50,
-              width: 50,
-              fit: BoxFit.contain,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: color,
+                            ),
+                          ),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "$price EGP",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: color,
+                            ),
+                          ),
+                          const Text(
+                            "per month",
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      ...features.map((feature) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: color,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  feature,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            "Subscribe Now",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,color: Colors.white
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10), // مسافة بين الشعار والنص
-            // النص الرئيسي
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 5),
-            // نص السعر
-            Text(
-              price,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.normal,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 10),
-            // زر الاشتراك
-            ElevatedButton(
-              onPressed: () {
-                
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // خلفية زرقاء
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 20,
+          ),
+          if (isPopular)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.purple,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.star,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      "POPULAR",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: const Text(
-                "Subscribe Now!",
-                style: TextStyle(fontSize: 14, color: Colors.white),
-              ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
