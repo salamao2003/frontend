@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:shared_preferences/shared_preferences.dart';
 // API Endpoints
 class AuthLogicCubit extends Cubit<AuthLogicState> {
   AuthLogicCubit() : super(AuthLogicInitial());
@@ -10,38 +10,75 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
 
   // Login Function
   Future<void> onLoginButtonPressed(String username, String password) async {
+
     if (username.isEmpty || password.isEmpty) {
+
       emit(AuthLogicError("Fields cannot be empty"));
+
       return;
+
     }
+
     try {
+
       emit(AuthLogicLoading());
 
+
       final requestBody = {
+
         "username": username,
+
         "password": password,
+
       };
 
+
       final response = await http.post(
+
         Uri.parse(loginUrl),
+
         headers: {"Content-Type": "application/json"},
+
         body: jsonEncode(requestBody),
+
       );
+
 
       final responseBody = jsonDecode(response.body);
 
+
       if (response.statusCode == 200) {
+
+        // حفظ الـ tokens
+
+        final prefs = await SharedPreferences.getInstance();
+
+        await prefs.setString('access_token', responseBody['access']);
+
+        await prefs.setString('refresh_token', responseBody['refresh']);
+
+        
+
         emit(AuthLogicSuccess("Login Successful!"));
+
       } else if (responseBody is Map && responseBody.isNotEmpty) {
-        // Extract error messages from backend
+
         final errorMessages = responseBody.values.join(", ");
+
         emit(AuthLogicError(errorMessages));
+
       } else {
+
         emit(AuthLogicError("Unknown error occurred"));
+
       }
+
     } catch (e) {
+
       emit(AuthLogicError("Failed to connect to the server"));
+
     }
+
   }
 
   // Sign-Up Function

@@ -50,36 +50,35 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: _buildAppBar(),
-    drawer: _buildDrawer(),
-    body: Container(
-      decoration: BoxDecoration(
-         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.blue.shade50,   
-            Colors.blue.shade100,  
-          ],
-          stops: const [0.7, 1.0],  
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _buildAppBar(),
+      drawer: _buildDrawer(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.blue.shade50,
+              Colors.blue.shade100,
+            ],
+            stops: const [0.7, 1.0],
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildPlannerCard(),
+              _buildNearbyStationCard(),
+              const SizedBox(height: 190),
+            ],
+          ),
         ),
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildPlannerCard(),
-            _buildNearbyStationCard(),
-            
-            const SizedBox(height: 180),
-          ],
-        ),
-      ),
-    ),
-    bottomNavigationBar: _buildBottomNavigationBar(),
-  );
-}
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
 
   AppBar _buildAppBar() {
     return AppBar(
@@ -89,12 +88,11 @@ Widget build(BuildContext context) {
           fontSize: 22,
           fontWeight: FontWeight.bold,
           letterSpacing: 1,
-          color: Colors.white
+          color: Colors.white,
         ),
       ),
       backgroundColor: Colors.blue,
       elevation: 0,
-      
     );
   }
 
@@ -158,57 +156,54 @@ Widget build(BuildContext context) {
     );
   }
 
- Widget _buildDrawerItem({
-  required IconData icon,
-  required String title,
-  required VoidCallback onTap,
-  bool showNewBadge = false,  
-}) {
-  return ListTile(
-    leading: Icon(icon, color: Colors.blue),
-    title: Row(
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 16),
-        ),
-        if (title == 'Chat Bot') ... [ 
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.purple.shade100,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.purple.shade300,
-                width: 1,
-              ),
-            ),
-            child: const Text(
-              'New',
-              style: TextStyle(
-                color: Colors.purple,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.blue),
+      title: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16),
           ),
+          if (title == 'Chat Bot') ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.purple.shade300,
+                  width: 1,
+                ),
+              ),
+              child: const Text(
+                'New',
+                style: TextStyle(
+                  color: Colors.purple,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ],
-      ],
-    ),
-    onTap: onTap,
-  );
-}
-
-  Widget _buildPlannerCard() {
+      ),
+      onTap: onTap,
+    );
+  }
+    Widget _buildPlannerCard() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
-          // Main Card
           Container(
-            margin: const EdgeInsets.only(top: 40), 
+            margin: const EdgeInsets.only(top: 40),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -227,7 +222,7 @@ Widget build(BuildContext context) {
                   padding: const EdgeInsets.only(
                     left: 16,
                     right: 16,
-                    top: 56, 
+                    top: 56,
                     bottom: 16,
                   ),
                   decoration: const BoxDecoration(
@@ -316,7 +311,6 @@ Widget build(BuildContext context) {
               ],
             ),
           ),
-          // Logo on top
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -367,18 +361,11 @@ Widget build(BuildContext context) {
                 ? const Center(child: CircularProgressIndicator())
                 : _stations.isEmpty
                     ? const Text("Failed to load stations")
-                    : DropdownButton<int>(
-                        hint: Text(hint),
+                    : SearchableDropdown(
+                        items: _stations,
                         value: value,
+                        hint: hint,
                         onChanged: onChanged,
-                        isExpanded: true,
-                        underline: Container(),
-                        items: _stations
-                            .map((station) => DropdownMenuItem<int>(
-                                  value: station['id'] as int,
-                                  child: Text(station['name'].toString()),
-                                ))
-                            .toList(),
                       ),
           ),
         ],
@@ -434,10 +421,11 @@ Widget build(BuildContext context) {
                 onPressed: () {
                   _homeLogic.findNearestStation(context);
                 },
-                icon: const Icon(Icons.location_on,color: Colors.white,),
+                icon: const Icon(Icons.location_on, color: Colors.white),
                 label: const Text(
                   "Nearby Station",
-                  style: TextStyle(color: Colors.white,
+                  style: TextStyle(
+                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -497,6 +485,193 @@ Widget build(BuildContext context) {
           navigateWithAnimation(context, SubscriptionPage());
         }
       },
+    );
+  }
+}
+
+class SearchableDropdown extends StatefulWidget {
+  final List<Map<String, dynamic>> items;
+  final int? value;
+  final String hint;
+  final Function(int?)? onChanged;
+
+  const SearchableDropdown({
+    Key? key,
+    required this.items,
+    required this.value,
+    required this.hint,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  State<SearchableDropdown> createState() => _SearchableDropdownState();
+}
+
+class _SearchableDropdownState extends State<SearchableDropdown> {
+  bool _isExpanded = false;
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _filteredItems = [];
+  final FocusNode _focusNode = FocusNode();
+  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _focusNode.dispose();
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _showOverlay() {
+    _removeOverlay();
+
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        width: size.width,
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: const Offset(0, 50),
+          child: Material(
+            elevation: 8,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.4,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _focusNode,
+                      decoration: InputDecoration(
+                        hintText: 'Search station...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _filteredItems = widget.items
+                              .where((item) => item['name']
+                                  .toString()
+                                  .toLowerCase()
+                                  .contains(value.toLowerCase()))
+                              .toList();
+                        });
+                      },
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = _filteredItems[index];
+                        final bool isSelected = widget.value == item['id'];
+                        return ListTile(
+                          title: Text(
+                            item['name'].toString(),
+                            style: TextStyle(
+                              color: isSelected ? Colors.blue : Colors.black,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                          tileColor: isSelected ? Colors.blue.withOpacity(0.1) : null,
+                          onTap: () {
+                            widget.onChanged?.call(item['id'] as int);
+                            _searchController.clear();
+                            _removeOverlay();
+                            setState(() {
+                              _isExpanded = false;
+                              _filteredItems = widget.items;
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _isExpanded = !_isExpanded;
+            if (_isExpanded) {
+              _showOverlay();
+              _focusNode.requestFocus();
+            } else {
+              _removeOverlay();
+            }
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.value != null
+                      ? widget.items
+                          .firstWhere(
+                            (item) => item['id'] == widget.value,
+                            orElse: () => {'name': widget.hint},
+                          )['name']
+                          .toString()
+                      : widget.hint,
+                  style: TextStyle(
+                    color: widget.value != null ? Colors.black : Colors.grey[600],
+                  ),
+                ),
+              ),
+              Icon(
+                _isExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                color: Colors.grey[600],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

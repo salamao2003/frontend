@@ -1,67 +1,332 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:egy_metro/cubit/my_account_user_service.dart';
+import 'package:egy_metro/ui/login_page.dart';
 
 class MyAccountPage extends StatefulWidget {
+  const MyAccountPage({Key? key}) : super(key: key);
+
   @override
   _MyAccountPageState createState() => _MyAccountPageState();
 }
 
 class _MyAccountPageState extends State<MyAccountPage> {
+  final MyAccountUserService _userService = MyAccountUserService();
+  final _formKey = GlobalKey<FormState>();
   
-  String firstName = "John";
-  String lastName = "Doe";
-  String email = "john.doe@example.com";
+  bool _isLoading = true;
+  bool _isEditing = false;
+  String? _error;
+  String _firstName = '';
+  bool _isAuthenticated = false;
+
+  late TextEditingController _emailController;
+late TextEditingController _firstNameController;  // إضافة
+  late TextEditingController _lastNameController;   // إضافة
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _firstNameController = TextEditingController();  // إضافة
+    _lastNameController = TextEditingController();   // إضافة
+    _checkAuthAndLoadProfile();
+  }
+
+  Future<void> _checkAuthAndLoadProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+      
+      if (token == null) {
+        setState(() {
+          _error = 'Please login to view your profile';
+          _isLoading = false;
+          _isAuthenticated = false;
+        });
+        
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => LoginPage()),
+            );
+          }
+        });
+        return;
+      }
+
+      setState(() => _isAuthenticated = true);
+      await _loadUserProfile();
+    } catch (e) {
+      setState(() {
+        _error = 'Authentication error occurred';
+        _isLoading = false;
+        _isAuthenticated = false;
+      });
+    }
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      setState(() => _isLoading = true);
+      final userData = await _userService.getUserProfile();
+      
+      setState(() {
+        _firstNameController.text = userData['first_name'] ?? '';
+        _firstName = userData['first_name'] ?? '';
+        _lastNameController.text = userData['last_name'] ?? '';
+        _emailController.text = userData['email'] ?? '';
+        _error = null;
+      });
+    } catch (e) {
+      if (e.toString().contains('No access token found') || 
+          e.toString().contains('Authentication failed')) {
+        setState(() {
+          _isAuthenticated = false;
+          _error = 'Session expired. Please login again.';
+        });
+        
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
+        }
+      } else {
+        setState(() => _error = e.toString());
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _updateProfile() async {
+  if (!_formKey.currentState!.validate()) return;
+
+  try {
+    setState(() => _isLoading = true);
+    
+    final updatedData = await _userService.updateProfile(
+      email: _emailController.text,
+      firstName: _firstNameController.text,
+      lastName: _lastNameController.text,
+    );
+
+    setState(() {
+      _firstName = updatedData['first_name'] ?? _firstNameController.text;
+      _isEditing = false;
+      _error = null;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  } catch (e) {
+    print('Update profile error: $e');
+    if (e.toString().contains('No access token found') || 
+        e.toString().contains('Authentication failed')) {
+      setState(() {
+        _isAuthenticated = false;
+        _error = 'Session expired. Please login again.';
+      });
+      
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating profile: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  } finally {
+    setState(() => _isLoading = false);
+  }
+}
+  Future<void> _logout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('refresh_token');
+      
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error logging out'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text(
-          "My Account",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.blue,
         elevation: 0,
+        backgroundColor: Colors.blue[600],
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(15),
-            bottomRight: Radius.circular(15),
-          ),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(20),
         ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.blue.shade50,
-              Colors.white,
-            ],
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildProfileHeader(),
-              const SizedBox(height: 20),
-              _buildInfoSection(),
-              const SizedBox(height: 20),
-              _buildActionsSection(),
-              const SizedBox(height: 170),
-            ],
-          ),
+        title: const Text(
+        'My Account',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
       ),
+      centerTitle: true,
+        actions: [
+          if (!_isLoading && _isAuthenticated)
+            IconButton(
+              icon: Icon(
+                _isEditing ? Icons.save_rounded : Icons.edit_rounded,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                if (_isEditing) {
+                  _updateProfile();
+                } else {
+                  setState(() => _isEditing = true);
+                }
+              },
+            ),
+          
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                color: Colors.red[700],
+                size: 60,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error: $_error',
+              style: TextStyle(
+                color: Colors.red[700],
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            if (_isAuthenticated)
+              ElevatedButton.icon(
+                onPressed: _loadUserProfile,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProfileHeader(),
+                const SizedBox(height: 24),
+                _buildProfileForm(),
+                
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildProfileHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
+  return Center( // إضافة Center widget
+    child: Container(
+      width: MediaQuery.of(context).size.width * 0.9, // تحديد عرض المستطيل
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue[600]!,
+            Colors.blue[400]!,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center, // إضافة محاذاة للمنتصف عمودياً
         children: [
           Container(
             width: 120,
@@ -69,257 +334,178 @@ class _MyAccountPageState extends State<MyAccountPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white,
+              border: Border.all(
+                color: Colors.white,
+                width: 4,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.blue.withOpacity(0.2),
-                  spreadRadius: 5,
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 2,
                   blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                "${firstName[0]}${lastName[0]}",
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade700,
-                ),
-              ),
+            child: Icon(
+              Icons.person_rounded,
+              size: 60,
+              color: Colors.blue[600],
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            "$firstName $lastName",
+            _firstName,
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
+          const SizedBox(height: 8),
           Text(
-            email,
+            _emailController.text,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: Colors.white.withOpacity(0.9),
             ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildInfoSection() {
+  Widget _buildProfileForm() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 5,
+            color: Colors.black.withOpacity(0.05),
+            spreadRadius: 2,
             blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          _buildInfoTile(
-            title: "First Name",
-            value: firstName,
-            icon: Icons.person_outline,
-          ),
-          const Divider(height: 1),
-          _buildInfoTile(
-            title: "Last Name",
-            value: lastName,
-            icon: Icons.person_outline,
-          ),
-          const Divider(height: 1),
-          _buildInfoTile(
-            title: "Email",
-            value: email,
-            icon: Icons.email_outlined,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoTile({
-    required String title,
-    required String value,
-    required IconData icon,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: Colors.blue),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                Icon(
+                  Icons.person_outline_rounded,
+                  color: Colors.blue[600],
+                  size: 24,
                 ),
+                const SizedBox(width: 8),
                 Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  'Profile Information',
+                  style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            _buildProfileField(
+              label: 'First Name',
+              controller: _firstNameController,
+              enabled: _isEditing,
+              icon: Icons.person_rounded,
+              keyboardType: TextInputType.name,
+            ),
+            const SizedBox(height: 16),
+            _buildProfileField(
+              label: 'Last Name',
+              controller: _lastNameController,
+              enabled: _isEditing,
+              icon: Icons.person_rounded,
+              keyboardType: TextInputType.name,
+            ),
+            const SizedBox(height: 16),
+            _buildProfileField(
+              label: 'Email',
+              controller: _emailController,
+              enabled: _isEditing,
+              icon: Icons.email_rounded,
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildActionsSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 5,
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildActionTile(
-            title: "Edit Email",
-            icon: Icons.edit,
-            onTap: _showEditEmailDialog,
-          ),
-          const Divider(height: 1),
-          _buildActionTile(
-            title: "Reset Password",
-            icon: Icons.lock_outline,
-            onTap: _showResetPasswordDialog,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionTile({
-    required String title,
+  Widget _buildProfileField({
+    required String label,
+    required TextEditingController controller,
+    required bool enabled,
     required IconData icon,
-    required VoidCallback onTap,
+    TextInputType? keyboardType,
   }) {
-    return ListTile(
-      onTap: onTap,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(10),
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: keyboardType,
+      style: TextStyle(
+        fontSize: 16,
+        color: Colors.grey[800],
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: Colors.grey[600],
+          fontSize: 14,
         ),
-        child: Icon(icon, color: Colors.blue),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
+        prefixIcon: Icon(icon, color: Colors.blue[600]),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.grey.shade300,
+          ),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.grey.shade300,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.blue[600]!,
+            width: 2,
+          ),
+        ),
+        filled: true,
+        fillColor: enabled ? Colors.white : Colors.grey[50],
       ),
-      trailing: const Icon(
-        Icons.arrow_forward_ios,
-        size: 16,
-        color: Colors.grey,
-      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return '$label is required';
+        }
+        if (keyboardType == TextInputType.emailAddress &&
+            !value.contains('@')) {
+          return 'Please enter a valid email';
+        }
+        return null;
+      },
     );
   }
 
-  void _showEditEmailDialog() {
-    final TextEditingController emailController = TextEditingController(text: email);
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Edit Email"),
-        content: TextField(
-          controller: emailController,
-          decoration: const InputDecoration(
-            labelText: "New Email",
-            border: OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.emailAddress,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() => email = emailController.text);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Email updated successfully"),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: const Text("Save"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showResetPasswordDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Reset Password"),
-        content: const Text(
-          "Are you sure you want to reset your password? "
-          "A password reset link will be sent to your email.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Password reset link sent to your email"),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: const Text("Reset"),
-          ),
-        ],
-      ),
-    );
+  @override
+  void dispose() {
+    _emailController.dispose(); 
+     _firstNameController.dispose();  // إضافة
+    _lastNameController.dispose();   // إضافة
+    super.dispose();
   }
 }
