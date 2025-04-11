@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:egy_metro/cubit/my_account_user_service.dart';
@@ -66,94 +68,156 @@ late TextEditingController _firstNameController;  // إضافة
   }
 
   Future<void> _loadUserProfile() async {
+
     try {
+
       setState(() => _isLoading = true);
+
       final userData = await _userService.getUserProfile();
+
       
+
+      // حفظ البيانات في SharedPreferences
+
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setString('user_profile', json.encode(userData));
+
+
       setState(() {
-        _firstNameController.text = userData['first_name'] ?? '';
+
         _firstName = userData['first_name'] ?? '';
+
+        _firstNameController.text = userData['first_name'] ?? '';
+
         _lastNameController.text = userData['last_name'] ?? '';
+
         _emailController.text = userData['email'] ?? '';
+
         _error = null;
+
       });
+
     } catch (e) {
-      if (e.toString().contains('No access token found') || 
-          e.toString().contains('Authentication failed')) {
+
+      // محاولة استخدام البيانات المخزنة محلياً إذا فشل الاتصال بالسيرفر
+
+      try {
+
+        final storedData = await _userService.getStoredProfile();
+
         setState(() {
-          _isAuthenticated = false;
-          _error = 'Session expired. Please login again.';
+
+          _firstName = storedData['first_name'] ?? '';
+
+          _firstNameController.text = storedData['first_name'] ?? '';
+
+          _lastNameController.text = storedData['last_name'] ?? '';
+
+          _emailController.text = storedData['email'] ?? '';
+
+          _error = null;
+
         });
-        
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LoginPage()),
-          );
-        }
-      } else {
+
+      } catch (storageError) {
+
         setState(() => _error = e.toString());
+
       }
+
     } finally {
+
       setState(() => _isLoading = false);
+
     }
+
   }
 
-  Future<void> _updateProfile() async {
-  if (!_formKey.currentState!.validate()) return;
+   Future<void> _updateProfile() async {
 
-  try {
-    setState(() => _isLoading = true);
-    
-    final updatedData = await _userService.updateProfile(
-      email: _emailController.text,
-      firstName: _firstNameController.text,
-      lastName: _lastNameController.text,
-    );
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _firstName = updatedData['first_name'] ?? _firstNameController.text;
-      _isEditing = false;
-      _error = null;
-    });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
+    try {
+
+      setState(() => _isLoading = true);
+
+      final updatedData = await _userService.updateProfile(
+
+        email: _emailController.text,
+
+        firstName: _firstNameController.text,
+
+        lastName: _lastNameController.text,
+
       );
-    }
-  } catch (e) {
-    print('Update profile error: $e');
-    if (e.toString().contains('No access token found') || 
-        e.toString().contains('Authentication failed')) {
+
+
       setState(() {
-        _isAuthenticated = false;
-        _error = 'Session expired. Please login again.';
+
+        _firstName = updatedData['first_name'] ?? '';
+
+        _firstNameController.text = updatedData['first_name'] ?? '';
+
+        _lastNameController.text = updatedData['last_name'] ?? '';
+
+        _emailController.text = updatedData['email'] ?? '';
+
+        _isEditing = false;
+
+        _error = null;
+
       });
-      
+
+
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => LoginPage()),
-        );
-      }
-    } else {
-      if (mounted) {
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating profile: ${e.toString()}'),
-            backgroundColor: Colors.red,
+
+          const SnackBar(
+
+            content: Text('Profile updated successfully'),
+
+            backgroundColor: Colors.green,
+
             behavior: SnackBarBehavior.floating,
+
           ),
+
         );
+
       }
+
+    } catch (e) {
+
+      setState(() => _error = e.toString());
+
+      if (mounted) {
+
+        ScaffoldMessenger.of(context).showSnackBar(
+
+          SnackBar(
+
+            content: Text('Error updating profile: ${e.toString()}'),
+
+            backgroundColor: Colors.red,
+
+            behavior: SnackBarBehavior.floating,
+
+          ),
+
+        );
+
+      }
+
+    } finally {
+
+      setState(() => _isLoading = false);
+
     }
-  } finally {
-    setState(() => _isLoading = false);
+
   }
-}
   Future<void> _logout() async {
     try {
       final prefs = await SharedPreferences.getInstance();

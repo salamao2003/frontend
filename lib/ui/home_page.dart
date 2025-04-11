@@ -1,4 +1,5 @@
 import 'package:egy_metro/ui/ChatBot_page.dart';
+import 'package:egy_metro/ui/Train_Schedule_page.dart';
 import 'package:flutter/material.dart';
 import 'package:egy_metro/ui/Buy_Ticket_page.dart';
 import 'package:egy_metro/ui/subscribtion_page.dart';
@@ -134,6 +135,11 @@ class _HomePageState extends State<HomePage> {
             icon: Icons.confirmation_number,
             title: 'My Tickets',
             onTap: () => navigateWithAnimation(context, MyTicketsPage()),
+          ),
+          _buildDrawerItem(
+            icon: Icons.calendar_month,
+            title: 'Train Schedule',
+            onTap: () => navigateWithAnimation(context, TrainSchedulesPage()),
           ),
           _buildDrawerItem(
             icon: Icons.account_balance_wallet,

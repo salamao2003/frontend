@@ -9,7 +9,7 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
   final String loginUrl = "https://backend-54v5.onrender.com/api/users/login/";
 
   // Login Function
-  Future<void> onLoginButtonPressed(String username, String password) async {
+ Future<void> onLoginButtonPressed(String username, String password) async {
 
     if (username.isEmpty || password.isEmpty) {
 
@@ -18,6 +18,7 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
       return;
 
     }
+
 
     try {
 
@@ -33,47 +34,73 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
       };
 
 
+      // إضافة print للتحقق من البيانات المرسلة
+
+      print('Sending login request with data: ${json.encode(requestBody)}');
+
+
       final response = await http.post(
 
         Uri.parse(loginUrl),
 
         headers: {"Content-Type": "application/json"},
 
-        body: jsonEncode(requestBody),
+        body: json.encode(requestBody),
 
       );
 
 
-      final responseBody = jsonDecode(response.body);
+      // طباعة استجابة السيرفر للتحقق
+
+      print('Server response: ${response.body}');
+
+      print('Response status code: ${response.statusCode}');
 
 
       if (response.statusCode == 200) {
 
-        // حفظ الـ tokens
-
-        final prefs = await SharedPreferences.getInstance();
-
-        await prefs.setString('access_token', responseBody['access']);
-
-        await prefs.setString('refresh_token', responseBody['refresh']);
+        final responseBody = json.decode(response.body);
 
         
 
-        emit(AuthLogicSuccess("Login Successful!"));
+        // التحقق من نجاح العملية
 
-      } else if (responseBody is Map && responseBody.isNotEmpty) {
+        if (responseBody['success'] == true) {
 
-        final errorMessages = responseBody.values.join(", ");
+          // حفظ التوكن من المسار الصحيح في الاستجابة
 
-        emit(AuthLogicError(errorMessages));
+          final prefs = await SharedPreferences.getInstance();
+
+          await prefs.setString('access_token', responseBody['data']['access']);
+
+          await prefs.setString('refresh_token', responseBody['data']['refresh']);
+
+          
+
+          // حفظ بيانات المستخدم إذا كنت تحتاجها
+
+          await prefs.setString('user_data', json.encode(responseBody['data']['user']));
+
+
+          emit(AuthLogicSuccess(responseBody['message'] ?? "Login Successful!"));
+
+        } else {
+
+          emit(AuthLogicError(responseBody['message'] ?? "Login failed"));
+
+        }
 
       } else {
 
-        emit(AuthLogicError("Unknown error occurred"));
+        final responseBody = json.decode(response.body);
+
+        emit(AuthLogicError(responseBody['message'] ?? "Login failed"));
 
       }
 
     } catch (e) {
+
+      print('Login error: $e'); // طباعة الخطأ للتحقق
 
       emit(AuthLogicError("Failed to connect to the server"));
 
