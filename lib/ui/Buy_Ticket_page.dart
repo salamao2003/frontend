@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:egy_metro/cubit/ticket_data.dart';
+import 'package:egy_metro/cubit/buy_ticket_logic.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BuyTicketPage extends StatefulWidget {
   @override
@@ -9,6 +12,35 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
   int _ticketCountFirst = 1;
   int _ticketCountSecond = 1;
   int _ticketCountThird = 1;
+  int _ticketCountFourth = 1;
+
+  int yellowTickets = 0;
+  int greenTickets = 0;
+  int redTickets = 0;
+  int blueTickets = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthAndInitialize();
+  }
+
+  Future<void> _checkAuthAndInitialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null) {
+      // Show message if not logged in
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please login to purchase tickets'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.orange,
+          ),
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +50,8 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
           "Buy Tickets",
           style: TextStyle(
             fontSize: 22,
-            fontWeight: FontWeight.bold,color: Colors.white
+            fontWeight: FontWeight.bold,
+            color: Colors.white
           ),
         ),
         backgroundColor: Colors.blue,
@@ -94,6 +127,18 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
                 }),
                 isPopular: false,
               ),
+              _buildTicketCard(
+                title: "VIP Ticket",
+                subtitle: "Up to 39 stations",
+                price: "20",
+                color: Colors.lightBlue,
+                ticketCount: _ticketCountFourth,
+                onIncrease: () => setState(() => _ticketCountFourth++),
+                onDecrease: () => setState(() {
+                  if (_ticketCountFourth > 1) _ticketCountFourth--;
+                }),
+                isPopular: false,
+              ),
               const SizedBox(height: 80),
             ],
           ),
@@ -143,7 +188,6 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,16 +284,98 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
                       ),
                       // Buy Button
                       ElevatedButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                "You purchased $ticketCount ${title.toLowerCase()}(s)!",
+                        onPressed: () async {
+                          // Check if user is logged in
+                          final prefs = await SharedPreferences.getInstance();
+                          final accessToken = prefs.getString('access_token');
+                          
+                          if (accessToken == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please login to purchase tickets'),
+                                behavior: SnackBarBehavior.floating,
+                                backgroundColor: Colors.orange,
                               ),
-                              behavior: SnackBarBehavior.floating,
-                              backgroundColor: color,
-                            ),
+                            );
+                            return;
+                          }
+
+                          String ticketType = "";
+                          switch (title) {
+                            case "Basic Ticket":
+                              ticketType = "BASIC";
+                              break;
+                            case "Standard Ticket":
+                              ticketType = "STANDARD";
+                              break;
+                            case "Premium Ticket":
+                              ticketType = "PREMIUM";
+                              break;
+                            case "VIP Ticket":
+                              ticketType = "VIP";
+                              break;
+                          }
+
+                          // Show loading indicator
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) {
+                              return Dialog(
+                                backgroundColor: Colors.white,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      CircularProgressIndicator(),
+                                      SizedBox(height: 15),
+                                      Text('Purchasing tickets...')
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           );
+
+                          // Call buy ticket API
+                          bool success = await BuyTicketLogic.buyTicket(ticketType, ticketCount);
+                          
+                          // Hide loading indicator
+                          Navigator.pop(context);
+
+                          if (success) {
+                            // Update the ticket count based on ticket type
+                            if (title == "Basic Ticket") {
+                              setState(() => TicketData.yellowTickets += ticketCount);
+                            } else if (title == "Standard Ticket") {
+                              setState(() => TicketData.greenTickets += ticketCount);
+                            } else if (title == "Premium Ticket") {
+                              setState(() => TicketData.redTickets += ticketCount);
+                            } else if (title == "VIP Ticket") {
+                              setState(() => TicketData.blueTickets += ticketCount);
+                            }
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "Successfully purchased $ticketCount ${title.toLowerCase()}(s)!",
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Failed to purchase tickets. Please try again.",
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: color,
@@ -263,7 +389,7 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.shopping_cart_outlined,color: Colors.white,),
+                            const Icon(Icons.shopping_cart_outlined, color: Colors.white),
                             const SizedBox(width: 8),
                             Text(
                               "Buy Now",

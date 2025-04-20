@@ -21,6 +21,7 @@ dependencies:
   permission_handler: ^11.3.0  # للتعامل مع الأذونات بشكل أفضل
   google_maps_flutter: ^2.5.3  # إذا كنت تخطط لإضافة خرائط
   shared_preferences: ^2.5.2
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
