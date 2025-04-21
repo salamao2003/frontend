@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:egy_metro/services/ticket_service.dart';
 // API Endpoints
 class AuthLogicCubit extends Cubit<AuthLogicState> {
   AuthLogicCubit() : super(AuthLogicInitial());
@@ -9,7 +10,7 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
   final String loginUrl = "https://backend-54v5.onrender.com/api/users/login/";
 
   // Login Function
- Future<void> onLoginButtonPressed(String username, String password) async {
+  Future<void> onLoginButtonPressed(String username, String password) async {
 
     if (username.isEmpty || password.isEmpty) {
 
@@ -34,8 +35,6 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
       };
 
 
-      // إضافة print للتحقق من البيانات المرسلة
-
       print('Sending login request with data: ${json.encode(requestBody)}');
 
 
@@ -50,8 +49,6 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
       );
 
 
-      // طباعة استجابة السيرفر للتحقق
-
       print('Server response: ${response.body}');
 
       print('Response status code: ${response.statusCode}');
@@ -61,13 +58,10 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
 
         final responseBody = json.decode(response.body);
 
-        
-
-        // التحقق من نجاح العملية
 
         if (responseBody['success'] == true) {
 
-          // حفظ التوكن من المسار الصحيح في الاستجابة
+          // Save token and user data
 
           final prefs = await SharedPreferences.getInstance();
 
@@ -75,11 +69,36 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
 
           await prefs.setString('refresh_token', responseBody['data']['refresh']);
 
-          
-
-          // حفظ بيانات المستخدم إذا كنت تحتاجها
-
           await prefs.setString('user_data', json.encode(responseBody['data']['user']));
+
+
+          // Sync tickets after successful login
+
+          try {
+
+            final ticketsResponse = await TicketService.getTickets();
+
+            print('Tickets sync response: $ticketsResponse');
+
+            
+
+            if (ticketsResponse['success'] == true) {
+
+              // You can handle the tickets data here if needed
+
+              print('Tickets synced successfully');
+
+            } else {
+
+              print('Failed to sync tickets: ${ticketsResponse['message']}');
+
+            }
+
+          } catch (e) {
+
+            print('Error syncing tickets: $e');
+
+          }
 
 
           emit(AuthLogicSuccess(responseBody['message'] ?? "Login Successful!"));
@@ -100,7 +119,7 @@ class AuthLogicCubit extends Cubit<AuthLogicState> {
 
     } catch (e) {
 
-      print('Login error: $e'); // طباعة الخطأ للتحقق
+      print('Login error: $e');
 
       emit(AuthLogicError("Failed to connect to the server"));
 

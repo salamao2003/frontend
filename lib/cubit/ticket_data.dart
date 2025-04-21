@@ -1,63 +1,61 @@
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class TicketData {
-  static int yellowTickets = 0;
-  static int greenTickets = 0;
-  static int redTickets = 0;
-  static int blueTickets = 0;
+  static List<Map<String, dynamic>> activeTickets = [];
+  static List<Map<String, dynamic>> expiredTickets = [];
 
-  static Map<String, List<String>> ticketQRCodes = {
-    'BASIC': [],    // Yellow tickets
-    'STANDARD': [], // Green tickets
-    'PREMIUM': [],  // Red tickets
-    'VIP': [],     // Blue tickets
-  };
+  static Future<void> fetchTickets() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
 
-  // Save ticket data
-  static Future<void> saveTicketData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('yellow_tickets', yellowTickets);
-    await prefs.setInt('green_tickets', greenTickets);
-    await prefs.setInt('red_tickets', redTickets);
-    await prefs.setInt('blue_tickets', blueTickets);
+      if (token == null) return;
 
-    // Save QR codes
-    await prefs.setString('qr_codes', json.encode(ticketQRCodes));
-  }
+      final response = await http.get(
+        Uri.parse('https://backend-54v5.onrender.com/api/tickets/'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
-  // Load ticket data
-  static Future<void> loadTicketData() async {
-    final prefs = await SharedPreferences.getInstance();
-    yellowTickets = prefs.getInt('yellow_tickets') ?? 0;
-    greenTickets = prefs.getInt('green_tickets') ?? 0;
-    redTickets = prefs.getInt('red_tickets') ?? 0;
-    blueTickets = prefs.getInt('blue_tickets') ?? 0;
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['results'] != null) {
+          final tickets = List<Map<String, dynamic>>.from(data['results']);
+          
+          activeTickets = tickets.where((ticket) => 
+            ticket['status'] == 'ACTIVE'
+          ).toList();
 
-    // Load QR codes
-    String? qrCodesString = prefs.getString('qr_codes');
-    if (qrCodesString != null) {
-      Map<String, dynamic> decodedMap = json.decode(qrCodesString);
-      ticketQRCodes = {
-        'BASIC': List<String>.from(decodedMap['BASIC'] ?? []),
-        'STANDARD': List<String>.from(decodedMap['STANDARD'] ?? []),
-        'PREMIUM': List<String>.from(decodedMap['PREMIUM'] ?? []),
-        'VIP': List<String>.from(decodedMap['VIP'] ?? []),
-      };
+          expiredTickets = tickets.where((ticket) => 
+            ticket['status'] == 'EXPIRED'
+          ).toList();
+        }
+      }
+    } catch (e) {
+      print('Error fetching tickets: $e');
     }
   }
 
-  // Add QR code and save
-  static Future<void> addQRCode(String ticketType, String qrCodeUrl) async {
-    ticketQRCodes[ticketType]?.add(qrCodeUrl);
-    await saveTicketData();
+  static int getActiveTicketCount(String ticketType) {
+    return activeTickets.where((ticket) => 
+      ticket['ticket_type'] == ticketType
+    ).length;
   }
 
-  // Get QR code
+  static List<Map<String, dynamic>> getActiveTickets(String ticketType) {
+    return activeTickets.where((ticket) => 
+      ticket['ticket_type'] == ticketType
+    ).toList();
+  }
+
   static String? getQRCode(String ticketType, int index) {
-    final list = ticketQRCodes[ticketType];
-    if (list != null && index < list.length) {
-      return list[index];
+    final tickets = getActiveTickets(ticketType);
+    if (index < tickets.length) {
+      return tickets[index]['qr_code_url'];
     }
     return null;
   }

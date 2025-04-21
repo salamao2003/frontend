@@ -1,167 +1,267 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart'; 
+import 'package:flutter/gestures.dart';
 import 'Blue_Tickets_page.dart';
 import 'Red_Tickets_page.dart';
-import 'buy_ticket_page.dart'; 
+import 'buy_ticket_page.dart';
 import 'animated_page_transition.dart';
 import 'Yellow_Tickets_page.dart';
 import 'Green_Tickets_page.dart';
-import '../cubit/ticket_data.dart';
-class MyTicketsPage extends StatelessWidget {
+import '../services/ticket_service.dart';
+
+class MyTicketsPage extends StatefulWidget {
+  @override
+  _MyTicketsPageState createState() => _MyTicketsPageState();
+}
+
+class _MyTicketsPageState extends State<MyTicketsPage> {
+  bool isLoading = true;
+  Map<String, int> ticketCounts = {
+    'total': 0,
+    'active': 0,
+    'used': 0,
+    'basic': 0,
+    'standard': 0,
+    'premium': 0,
+    'vip': 0,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTickets();
+  }
+
+  Future<void> _loadTickets() async {
+    setState(() => isLoading = true);
+    try {
+      final response = await TicketService.getTickets();
+      if (response['results'] != null) {
+        final tickets = response['results'] as List;
+        
+        // Reset counts
+        int totalCount = tickets.length;
+        int activeCount = 0;
+        int usedCount = 0;
+        int basicCount = 0;
+        int standardCount = 0;
+        int premiumCount = 0;
+        int vipCount = 0;
+
+        // Count tickets by type and status
+        for (var ticket in tickets) {
+          if (ticket['status'] == 'ACTIVE') {
+            activeCount++;
+            switch (ticket['ticket_type']) {
+              case 'BASIC':
+                basicCount++;
+                break;
+              case 'STANDARD':
+                standardCount++;
+                break;
+              case 'PREMIUM':
+                premiumCount++;
+                break;
+              case 'VIP':
+                vipCount++;
+                break;
+            }
+          } else if (ticket['status'] == 'USED') {
+            usedCount++;
+          }
+        }
+
+        setState(() {
+          ticketCounts = {
+            'total': totalCount,
+            'active': activeCount,
+            'used': usedCount,
+            'basic': basicCount,
+            'standard': standardCount,
+            'premium': premiumCount,
+            'vip': vipCount,
+          };
+        });
+      }
+    } catch (e) {
+      print('Error loading tickets: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.blue.shade100,
-              Colors.white,
-            ],
+      body: RefreshIndicator(
+        onRefresh: _loadTickets,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.blue.shade100,
+                Colors.white,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Custom App Bar
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Column(
                   children: [
+                    // Custom App Bar
                     Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            spreadRadius: 1,
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.2),
+                                  spreadRadius: 1,
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_back_ios_new),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          const Text(
+                            "My Tickets",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.refresh),
+                            onPressed: _loadTickets,
                           ),
                         ],
                       ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new),
-                        onPressed: () => Navigator.pop(context),
+                    ),
+
+                    // Tickets Summary
+                    Container(
+                      margin: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 5,
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildTicketCounter("Total\nTickets", "${ticketCounts['total']}"),
+                          const VerticalDivider(thickness: 1),
+                          _buildTicketCounter("Active\nTickets", "${ticketCounts['active']}"),
+                          const VerticalDivider(thickness: 1),
+                          _buildTicketCounter("Used\nTickets", "${ticketCounts['used']}"),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    const Text(
-                      "My Tickets",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+
+                    // Tickets Grid
+                    Expanded(
+                      child: GridView.count(
+                        padding: const EdgeInsets.all(20),
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.85,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                        children: [
+                          _buildTicketCard(
+                            context,
+                            "Basic",
+                            "Yellow Tickets",
+                            ticketCounts['basic'] ?? 0,
+                            Colors.yellow.shade600,
+                            () => navigateWithAnimation(context, YellowTicketsPage()),
+                            Icons.confirmation_number_outlined,
+                          ),
+                          _buildTicketCard(
+                            context,
+                            "Standard",
+                            "Green Tickets",
+                            ticketCounts['standard'] ?? 0,
+                            Colors.green,
+                            () => navigateWithAnimation(context, GreenTicketsPage()),
+                            Icons.confirmation_num_outlined,
+                          ),
+                          _buildTicketCard(
+                            context,
+                            "Premium",
+                            "Red Tickets",
+                            ticketCounts['premium'] ?? 0,
+                            Colors.red,
+                            () => navigateWithAnimation(context, RedTicketsPage()),
+                            Icons.confirmation_num_outlined,
+                          ),
+                          _buildTicketCard(
+                            context,
+                            "VIP",
+                            "Blue Tickets",
+                            ticketCounts['vip'] ?? 0,
+                            Colors.blue,
+                            () => navigateWithAnimation(context, BlueTicketsPage()),
+                            Icons.confirmation_num_outlined,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Buy Tickets Button
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      child: ElevatedButton(
+                        onPressed: () => navigateWithAnimation(context, BuyTicketPage()),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: 5,
+                        ),
+                        child: const Text(
+                          "Buy New Tickets",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-
-              // Tickets Summary
-              Container(
-                margin: const EdgeInsets.all(20),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 5,
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildTicketCounter("Total\nTickets", 
-                        "${TicketData.yellowTickets + TicketData.greenTickets + TicketData.redTickets + TicketData.blueTickets}"),
-                    const VerticalDivider(thickness: 1),
-                    _buildTicketCounter("Active\nTickets", "0"),
-                    const VerticalDivider(thickness: 1),
-                    _buildTicketCounter("Used\nTickets", "0"),
-                  ],
-                ),
-              ),
-
-              // Tickets Grid
-              Expanded(
-                child: GridView.count(
-                  padding: const EdgeInsets.all(20),
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.85,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  children: [
-                    _buildTicketCard(
-                      context,
-                      "Basic",
-                      "Yellow Tickets",
-                      TicketData.yellowTickets,
-                      Colors.yellow.shade600,
-                      () => navigateWithAnimation(context, YellowTicketsPage()),
-                      Icons.confirmation_number_outlined,
-                    ),
-                    _buildTicketCard(
-                      context,
-                      "Standard",
-                      "Green Tickets",
-                      TicketData.greenTickets,
-                      Colors.green,
-                      () => navigateWithAnimation(context, GreenTicketsPage()),
-                      Icons.confirmation_num_outlined,
-                    ),
-                    _buildTicketCard(
-                      context,
-                      "Premium",
-                      "Red Tickets",
-                      TicketData.redTickets,
-                      Colors.red,
-                      () => navigateWithAnimation(context, RedTicketsPage()),
-                      Icons.confirmation_num_outlined,
-                    ),
-                    _buildTicketCard(
-                      context,
-                      "VIP",
-                      "Blue Tickets",
-                      TicketData.blueTickets,
-                      Colors.blue,
-                      () => navigateWithAnimation(context, BlueTicketsPage()),
-                      Icons.confirmation_num_outlined,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Buy Tickets Button
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                child: ElevatedButton(
-                  onPressed: () => navigateWithAnimation(context, BuyTicketPage()),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    elevation: 5,
-                  ),
-                  child: const Text(
-                    "Buy New Tickets",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,color: Colors.white
+                if (isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.1),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
                     ),
                   ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

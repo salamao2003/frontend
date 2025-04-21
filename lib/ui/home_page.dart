@@ -10,7 +10,7 @@ import 'package:egy_metro/ui/Lines_page.dart';
 import 'package:egy_metro/ui/My_Tickets_page.dart';
 import 'package:egy_metro/ui/My_Account_page.dart';
 import 'package:egy_metro/cubit/home_logic.dart';
-
+import 'package:egy_metro/ui/my_subscription_page.dart';
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -130,6 +130,11 @@ class _HomePageState extends State<HomePage> {
             icon: Icons.account_circle,
             title: 'My Account',
             onTap: () => navigateWithAnimation(context, MyAccountPage()),
+          ),
+           _buildDrawerItem(
+            icon: Icons.mobile_friendly,
+            title: 'My Subscription',
+            onTap: () => navigateWithAnimation(context, MySubscriptionPage()),
           ),
           _buildDrawerItem(
             icon: Icons.confirmation_number,

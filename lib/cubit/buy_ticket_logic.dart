@@ -16,58 +16,26 @@ class BuyTicketLogic {
 
   // Buy ticket method
   static Future<bool> buyTicket(String ticketType, int quantity) async {
-    try {
-      // Get the stored access token
-      String? accessToken = await getStoredAccessToken();
-      
-      if (accessToken == null) {
-        print('No access token found. Please login first.');
-        return false;
-      }
+  try {
+    String? accessToken = await getStoredAccessToken();
+    if (accessToken == null) return false;
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/tickets/'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode({
-          'ticket_type': ticketType,
-          'quantity': quantity,
-        }),
-      );
+    final response = await http.post(
+      Uri.parse('$baseUrl/tickets/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode({
+        'ticket_type': ticketType,
+        'quantity': quantity,
+      }),
+    );
 
-      print('Buy ticket response status: ${response.statusCode}');
-      print('Buy ticket response body: ${response.body}');
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] != null) {
-          // Store QR code URL
-          if (data['data'] is List) {
-            for (var ticket in data['data']) {
-              String qrCodeUrl = ticket['qr_code_url'] ?? '';
-              if (qrCodeUrl.isNotEmpty) {
-                TicketData.addQRCode(ticketType, qrCodeUrl);
-              }
-            }
-          } else {
-            String qrCodeUrl = data['data']['qr_code_url'] ?? '';
-            if (qrCodeUrl.isNotEmpty) {
-              TicketData.addQRCode(ticketType, qrCodeUrl);
-            }
-          }
-          return true;
-        }
-      } else if (response.statusCode == 401) {
-        // Token expired or invalid
-        print('Token expired or invalid. Please login again.');
-        return false;
-      }
-      return false;
-    } catch (e) {
-      print('Error purchasing ticket: $e');
-      return false;
-    }
+    return response.statusCode == 201 || response.statusCode == 200;
+  } catch (e) {
+    print('Error purchasing ticket: $e');
+    return false;
   }
+}
 }

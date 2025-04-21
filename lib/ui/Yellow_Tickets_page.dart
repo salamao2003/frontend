@@ -1,18 +1,49 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:egy_metro/cubit/ticket_data.dart';
+import '../services/ticket_service.dart';
 
+class YellowTicketsPage extends StatefulWidget {
+  @override
+  _YellowTicketsPageState createState() => _YellowTicketsPageState();
+}
 
-class YellowTicketsPage extends StatelessWidget {
-  
-  // Convert base64 to Image
+class _YellowTicketsPageState extends State<YellowTicketsPage> {
+  List<dynamic> activeTickets = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTickets();
+  }
+
+  Future<void> _loadTickets() async {
+    setState(() => isLoading = true);
+    try {
+      final response = await TicketService.getTickets();
+      print('Tickets response: $response'); // للتحقق من البيانات
+
+      if (response['results'] != null) {
+        final allTickets = response['results'] as List;
+        setState(() {
+          activeTickets = allTickets.where((ticket) => 
+            ticket['ticket_type'] == 'BASIC' && 
+            ticket['status'] == 'ACTIVE'
+          ).toList();
+        });
+        print('Found ${activeTickets.length} active yellow tickets');
+      }
+    } catch (e) {
+      print('Error loading tickets: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
   Widget _buildQRImage(String base64String) {
     try {
-      // Remove the data:image/png;base64, prefix if it exists
       final String cleanBase64 = base64String.replaceAll(RegExp(r'data:image/\w+;base64,'), '');
-      
-      // Decode base64 to bytes
       final Uint8List bytes = base64Decode(cleanBase64);
       
       return Image.memory(
@@ -65,6 +96,12 @@ class YellowTicketsPage extends StatelessWidget {
         ),
         backgroundColor: Colors.yellow,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadTickets,
+          ),
+        ],
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(15),
@@ -72,80 +109,111 @@ class YellowTicketsPage extends StatelessWidget {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.yellow.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.yellow),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Number of Tickets: ",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        onRefresh: _loadTickets,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.yellow.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.yellow),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Active Tickets: ",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Text(
-                  "${TicketData.yellowTickets}",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.yellow.shade800,
+                  Text(
+                    "${activeTickets.length}",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.yellow.shade800,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: TicketData.yellowTickets > 0
-                ? ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: TicketData.yellowTickets,
-                    itemBuilder: (context, index) {
-                      final qrCodeUrl = TicketData.getQRCode('BASIC', index);
-
-                      return Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Basic Ticket #${index + 1}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
+            Expanded(
+              child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : activeTickets.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.confirmation_number_outlined,
+                            size: 70,
+                            color: Colors.grey.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No active tickets',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: activeTickets.length,
+                      itemBuilder: (context, index) {
+                        final ticket = activeTickets[index];
+                        return Card(
+                          elevation: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Basic Ticket #${ticket['ticket_number']}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    const Text(
-                                      'Up to 9 stations',
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14,
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Up to 9 stations',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Valid until: ${ticket['valid_until']?.split('T')[0] ?? 'N/A'}',
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: qrCodeUrl != null
+                                ElevatedButton.icon(
+                                  onPressed: ticket['qr_code_url'] != null
                                     ? () {
                                         showDialog(
                                           context: context,
@@ -190,11 +258,11 @@ class YellowTicketsPage extends StatelessWidget {
                                                           ),
                                                         ],
                                                       ),
-                                                      child: _buildQRImage(qrCodeUrl),
+                                                      child: _buildQRImage(ticket['qr_code_url']),
                                                     ),
                                                     const SizedBox(height: 20),
                                                     Text(
-                                                      'Ticket #${index + 1}',
+                                                      'Ticket #${ticket['ticket_number']}',
                                                       style: const TextStyle(
                                                         fontSize: 16,
                                                         color: Colors.grey,
@@ -208,50 +276,31 @@ class YellowTicketsPage extends StatelessWidget {
                                         );
                                       }
                                     : null,
-                                icon: const Icon(
-                                  Icons.qr_code,
-                                  color: Colors.black87,
-                                ),
-                                label: const Text(
-                                  'View QR Code',
-                                  style: TextStyle(color: Colors.black87),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.yellow,
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                  icon: const Icon(
+                                    Icons.qr_code,
+                                    color: Colors.black87,
+                                  ),
+                                  label: const Text(
+                                    'View QR Code',
+                                    style: TextStyle(color: Colors.black87),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.yellow,
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.confirmation_number_outlined,
-                          size: 70,
-                          color: Colors.grey.withOpacity(0.5),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'No tickets available',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
