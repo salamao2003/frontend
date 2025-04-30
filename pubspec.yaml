@@ -22,6 +22,7 @@ dependencies:
   google_maps_flutter: ^2.5.3  # إذا كنت تخطط لإضافة خرائط
   shared_preferences: ^2.5.2
   cached_network_image: ^3.4.1
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:

@@ -7,6 +7,7 @@ import 'animated_page_transition.dart';
 import 'Yellow_Tickets_page.dart';
 import 'Green_Tickets_page.dart';
 import '../services/ticket_service.dart';
+import 'dart:async';
 
 class MyTicketsPage extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class MyTicketsPage extends StatefulWidget {
 }
 
 class _MyTicketsPageState extends State<MyTicketsPage> {
+  Timer? _timer;
   bool isLoading = true;
   Map<String, int> ticketCounts = {
     'total': 0,
@@ -29,7 +31,69 @@ class _MyTicketsPageState extends State<MyTicketsPage> {
   void initState() {
     super.initState();
     _loadTickets();
+     _checkForPendingUpgrades();
+     Timer.periodic(Duration(seconds: 30), (_) {
+  if (mounted) {
+    _checkForPendingUpgrades();
   }
+});
+  }
+
+@override
+void dispose() {
+  _timer?.cancel();
+  super.dispose();
+}
+
+Future<void> _checkForPendingUpgrades() async {
+  final response = await TicketService.syncTickets();
+  if (response['success'] == true) {
+    final tickets = response['data'];
+    for (final ticket in tickets) {
+      if (ticket['upgrade_required'] == true) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showUpgradeDialog(ticket);
+        });
+        break;
+      }
+    }
+  }
+}
+
+void _showUpgradeDialog(Map<String, dynamic> ticket) {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Ticket Upgrade Required'),
+      content: Text(
+        'You need to upgrade ticket #${ticket['ticket_number']} to ${ticket['new_ticket_type']}.\nPrice: ${ticket['upgrade_price']} EGP',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            Navigator.pop(context);
+            final result = await TicketService.upgradeTicket(
+              ticket['ticket_number'],
+              ticket['stations_count'], // as required by backend
+            );
+            final isSuccess = result['success'] == true;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(isSuccess ? 'Ticket upgraded successfully' : 'Upgrade failed'),
+                backgroundColor: isSuccess ? Colors.green : Colors.red,
+              ),
+            );
+          },
+          child: const Text('Upgrade Now'),
+        ),
+      ],
+    ),
+  );
+}
 
   Future<void> _loadTickets() async {
     setState(() => isLoading = true);

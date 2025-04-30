@@ -137,38 +137,59 @@ class TicketService {
 
   // Sync tickets
   static Future<Map<String, dynamic>> syncTickets() async {
-    try {
-      final token = await _getAccessToken();
-      
-      if (token == null) {
-        return {
-          'success': false,
-          'message': 'No access token found'
-        };
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/tickets/sync/'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      }
-
+  try {
+    final token = await _getAccessToken();
+    
+    if (token == null) {
       return {
         'success': false,
-        'message': 'Failed to sync tickets'
-      };
-    } catch (e) {
-      print('Error syncing tickets: $e');
-      return {
-        'success': false,
-        'message': 'Error syncing tickets'
+        'message': 'No access token found'
       };
     }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/tickets/sync/'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    print('Sync tickets API Response Status: ${response.statusCode}');
+    print('Sync tickets API Response Body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+
+    return {
+      'success': false,
+      'message': 'Failed to sync tickets. Status: ${response.statusCode}'
+    };
+  } catch (e) {
+    print('Error syncing tickets: $e');
+    return {
+      'success': false,
+      'message': 'Error syncing tickets: $e'
+    };
+  }
+}
+  static Future<Map<String, dynamic>> upgradeTicket(
+    String ticketNumber,
+    int stationsCount,
+  ) async {
+    final token = await _getAccessToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/tickets/$ticketNumber/upgrade/'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'stations_count': stationsCount,
+        'payment_confirmed': true,
+      }),
+    );
+    return json.decode(response.body);
   }
 }

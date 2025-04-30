@@ -19,28 +19,27 @@ class _YellowTicketsPageState extends State<YellowTicketsPage> {
   }
 
   Future<void> _loadTickets() async {
-    setState(() => isLoading = true);
-    try {
-      final response = await TicketService.getTickets();
-      print('Tickets response: $response'); // للتحقق من البيانات
+  setState(() => isLoading = true);
+  try {
+    final response = await TicketService.getTickets();
+    print('Tickets response: $response');
 
-      if (response['results'] != null) {
-        final allTickets = response['results'] as List;
-        setState(() {
-          activeTickets = allTickets.where((ticket) => 
-            ticket['ticket_type'] == 'BASIC' && 
-            ticket['status'] == 'ACTIVE'
-          ).toList();
-        });
-        print('Found ${activeTickets.length} active yellow tickets');
-      }
-    } catch (e) {
-      print('Error loading tickets: $e');
-    } finally {
-      setState(() => isLoading = false);
+    if (response['results'] != null) {
+      final allTickets = response['results'] as List;
+      setState(() {
+        activeTickets = allTickets.where((ticket) => 
+          ticket['ticket_type'] == 'BASIC' && 
+          (ticket['status'] == 'ACTIVE' || ticket['status'] == 'IN_USE')
+        ).toList();
+      });
+      print('Found ${activeTickets.length} active/in-use yellow tickets');
     }
+  } catch (e) {
+    print('Error loading tickets: $e');
+  } finally {
+    setState(() => isLoading = false);
   }
-
+}
   Widget _buildQRImage(String base64String) {
     try {
       final String cleanBase64 = base64String.replaceAll(RegExp(r'data:image/\w+;base64,'), '');
