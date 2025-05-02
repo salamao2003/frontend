@@ -8,7 +8,9 @@ import 'Yellow_Tickets_page.dart';
 import 'Green_Tickets_page.dart';
 import '../services/ticket_service.dart';
 import 'dart:async';
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 class MyTicketsPage extends StatefulWidget {
   @override
   _MyTicketsPageState createState() => _MyTicketsPageState();
@@ -46,17 +48,38 @@ void dispose() {
 }
 
 Future<void> _checkForPendingUpgrades() async {
-  final response = await TicketService.syncTickets();
-  if (response['success'] == true) {
-    final tickets = response['data'];
-    for (final ticket in tickets) {
-      if (ticket['upgrade_required'] == true) {
+  try {
+    final token = await SharedPreferences.getInstance()
+        .then((prefs) => prefs.getString('access_token'));
+        
+    if (token == null) return;
+
+    final response = await http.get(
+      Uri.parse('https://backend-54v5.onrender.com/api/tickets/pending-upgrades/'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      
+      if (data['has_pending_upgrades'] == true && data['upgrade_details'] != null) {
+        final upgradeDetails = data['upgrade_details'];
+        
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showUpgradeDialog(ticket);
+          _showUpgradeDialog({
+            'ticket_number': upgradeDetails['ticket_number'],
+            'new_ticket_type': upgradeDetails['new_ticket_type'],
+            'upgrade_price': upgradeDetails['upgrade_price'],
+            'stations_count': upgradeDetails['stations_count'],
+          });
         });
-        break;
       }
     }
+  } catch (e) {
+    print('Error checking for pending upgrades: $e');
   }
 }
 
@@ -78,7 +101,7 @@ void _showUpgradeDialog(Map<String, dynamic> ticket) {
             Navigator.pop(context);
             final result = await TicketService.upgradeTicket(
               ticket['ticket_number'],
-              ticket['stations_count'], // as required by backend
+              ticket['stations_count'],
             );
             final isSuccess = result['success'] == true;
             ScaffoldMessenger.of(context).showSnackBar(
