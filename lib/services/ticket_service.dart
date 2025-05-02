@@ -174,22 +174,146 @@ class TicketService {
     };
   }
 }
-  static Future<Map<String, dynamic>> upgradeTicket(
-    String ticketNumber,
-    int stationsCount,
-  ) async {
+static Future<Map<String, dynamic>> getPendingUpgrades() async {
+
+  try {
+
     final token = await _getAccessToken();
+
+    
+
+    if (token == null) {
+
+      return {
+
+        'success': false,
+
+        'message': 'No access token found'
+
+      };
+
+    }
+
+
+    final response = await http.get(
+
+      Uri.parse('$baseUrl/tickets/pending-upgrades/'),
+
+      headers: {
+
+        'Authorization': 'Bearer $token',
+
+        'Content-Type': 'application/json',
+
+      },
+
+    );
+
+
+    if (response.statusCode == 200) {
+
+      return json.decode(response.body);
+
+    }
+
+
+    return {
+
+      'success': false,
+
+      'message': 'Failed to get pending upgrades'
+
+    };
+
+  } catch (e) {
+
+    print('Error getting pending upgrades: $e');
+
+    return {
+
+      'success': false,
+
+      'message': 'Error getting pending upgrades'
+
+    };
+
+  }
+
+}
+  static Future<Map<String, dynamic>> upgradeTicket(String ticketId, String newTicketType) async {
+  try {
+    final token = await _getAccessToken();
+    
+    if (token == null) {
+      return {
+        'success': false,
+        'message': 'No access token found'
+      };
+    }
+
     final response = await http.post(
-      Uri.parse('$baseUrl/tickets/$ticketNumber/upgrade/'),
+      Uri.parse('$baseUrl/tickets/$ticketId/upgrade-with-wallet/'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        
+      },
+      body: json.encode({
+        'new_ticket_type': newTicketType,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+
+    return {
+      'success': false,
+      'message': 'Failed to upgrade ticket'
+    };
+  } catch (e) {
+    print('Error upgrading ticket: $e');
+    return {
+      'success': false,
+      'message': 'Error upgrading ticket'
+    };
+  }
+}
+static Future<Map<String, dynamic>> upgradeTicketWithWallet(String ticketId, String newTicketType) async {
+  try {
+    final token = await _getAccessToken();
+    
+    if (token == null) {
+      return {
+        'success': false,
+        'message': 'No access token found'
+      };
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/tickets/$ticketId/upgrade-with-wallet/'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
       body: json.encode({
-        'stations_count': stationsCount,
-        'payment_confirmed': true,
+        'new_ticket_type': newTicketType
       }),
     );
-    return json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+
+    return {
+      'success': false,
+      'message': 'Failed to upgrade ticket'
+    };
+  } catch (e) {
+    print('Error upgrading ticket: $e');
+    return {
+      'success': false,
+      'message': 'Error upgrading ticket'
+    };
   }
+}
 }

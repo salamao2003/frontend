@@ -37,7 +37,6 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
   }
 
   Future<void> _purchaseTicket(String title, Color color, int ticketCount) async {
-    // Check if user is logged in
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
     
@@ -97,32 +96,27 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
     );
 
     try {
-      // Call buy ticket API
-      bool success = await BuyTicketLogic.buyTicket(ticketType, ticketCount);
+      final result = await BuyTicketLogic.buyTicket(ticketType, ticketCount);
       
       // Hide loading indicator
       Navigator.pop(context);
 
-      if (success) {
+      if (result['success']) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              "Successfully purchased $ticketCount ${title.toLowerCase()}(s)!",
-            ),
+            content: Text(result['message']),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.green,
           ),
         );
 
-        // Optionally navigate back
+        // Navigate back
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Failed to purchase tickets. Please try again.",
-            ),
+          SnackBar(
+            content: Text(result['message']),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.red,
           ),
@@ -135,9 +129,7 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "Error: ${e.toString()}",
-          ),
+          content: Text("Error: ${e.toString()}"),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.red,
         ),

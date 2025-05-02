@@ -15,27 +15,49 @@ class BuyTicketLogic {
   }
 
   // Buy ticket method
-  static Future<bool> buyTicket(String ticketType, int quantity) async {
-  try {
-    String? accessToken = await getStoredAccessToken();
-    if (accessToken == null) return false;
+  static Future<Map<String, dynamic>> buyTicket(String ticketType, int quantity) async {
+    try {
+      String? accessToken = await getStoredAccessToken();
+      if (accessToken == null) {
+        return {
+          'success': false,
+          'message': 'No access token found'
+        };
+      }
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/tickets/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode({
-        'ticket_type': ticketType,
-        'quantity': quantity,
-      }),
-    );
+      final response = await http.post(
+        Uri.parse('$baseUrl/tickets/purchase-with-wallet/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({
+          'ticket_type': ticketType,
+          'quantity': quantity,
+        }),
+      );
 
-    return response.statusCode == 201 || response.statusCode == 200;
-  } catch (e) {
-    print('Error purchasing ticket: $e');
-    return false;
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': responseData['message'],
+          'data': responseData
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to purchase ticket'
+        };
+      }
+
+    } catch (e) {
+      print('Error purchasing ticket: $e');
+      return {
+        'success': false,
+        'message': 'Error occurred while purchasing ticket'
+      };
+    }
   }
-}
 }

@@ -65,11 +65,13 @@ Future<void> _checkForPendingUpgrades() async {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       
-      if (data['has_pending_upgrades'] == true && data['upgrade_details'] != null) {
+      if (data['has_pending_upgrades'] == true && data['ticket'] != null && data['upgrade_details'] != null) {
+        final ticketId = data['ticket']['id'].toString();
         final upgradeDetails = data['upgrade_details'];
         
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _showUpgradeDialog({
+            'ticket_id': ticketId, // اضافة ticket id
             'ticket_number': upgradeDetails['ticket_number'],
             'new_ticket_type': upgradeDetails['new_ticket_type'],
             'upgrade_price': upgradeDetails['upgrade_price'],
@@ -83,13 +85,13 @@ Future<void> _checkForPendingUpgrades() async {
   }
 }
 
-void _showUpgradeDialog(Map<String, dynamic> ticket) {
+void _showUpgradeDialog(Map<String, dynamic> upgradeDetails) {
   showDialog(
     context: context,
     builder: (_) => AlertDialog(
       title: const Text('Ticket Upgrade Required'),
       content: Text(
-        'You need to upgrade ticket #${ticket['ticket_number']} to ${ticket['new_ticket_type']}.\nPrice: ${ticket['upgrade_price']} EGP',
+        'You need to upgrade ticket #${upgradeDetails['ticket_number']} to ${upgradeDetails['new_ticket_type']}.\nPrice: ${upgradeDetails['upgrade_price']} EGP',
       ),
       actions: [
         TextButton(
@@ -99,17 +101,49 @@ void _showUpgradeDialog(Map<String, dynamic> ticket) {
         ElevatedButton(
           onPressed: () async {
             Navigator.pop(context);
-            final result = await TicketService.upgradeTicket(
-              ticket['ticket_number'],
-              ticket['stations_count'],
+            
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return const Center(child: CircularProgressIndicator());
+              },
             );
-            final isSuccess = result['success'] == true;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(isSuccess ? 'Ticket upgraded successfully' : 'Upgrade failed'),
-                backgroundColor: isSuccess ? Colors.green : Colors.red,
-              ),
-            );
+
+            try {
+              final result = await TicketService.upgradeTicketWithWallet(
+                upgradeDetails['ticket_id'],
+                upgradeDetails['new_ticket_type'],
+              );
+
+              Navigator.pop(context);
+
+              if (result['success'] == true) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(result['message'] ?? 'Ticket upgraded successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                await _loadTickets();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(result['message'] ?? 'Failed to upgrade ticket'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            } catch (e) {
+              Navigator.pop(context);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           },
           child: const Text('Upgrade Now'),
         ),
@@ -117,7 +151,6 @@ void _showUpgradeDialog(Map<String, dynamic> ticket) {
     ),
   );
 }
-
   Future<void> _loadTickets() async {
     setState(() => isLoading = true);
     try {
