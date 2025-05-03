@@ -18,21 +18,21 @@ class _RedTicketsPageState extends State<RedTicketsPage> {
     _loadTickets();
   }
 
-    Future<void> _loadTickets() async {
+  Future<void> _loadTickets() async {
     setState(() => isLoading = true);
     try {
       final response = await TicketService.getTickets();
-      print('Tickets response: $response'); // للتحقق من البيانات
+      print('Tickets response: $response');
 
       if (response['results'] != null) {
         final allTickets = response['results'] as List;
         setState(() {
           activeTickets = allTickets.where((ticket) => 
             ticket['ticket_type'] == 'PREMIUM' && 
-            ticket['status'] == 'ACTIVE'
+            (ticket['status'] == 'ACTIVE' || ticket['status'] == 'IN_USE')
           ).toList();
         });
-        print('Found ${activeTickets.length} active red tickets');
+        print('Found ${activeTickets.length} active/in-use red tickets');
       }
     } catch (e) {
       print('Error loading tickets: $e');
@@ -40,7 +40,6 @@ class _RedTicketsPageState extends State<RedTicketsPage> {
       setState(() => isLoading = false);
     }
   }
-
 
   Widget _buildQRImage(String base64String) {
     try {
@@ -53,6 +52,7 @@ class _RedTicketsPageState extends State<RedTicketsPage> {
         height: 200,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
+          print('Error loading QR code: $error');
           return const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -67,6 +67,7 @@ class _RedTicketsPageState extends State<RedTicketsPage> {
         },
       );
     } catch (e) {
+      print('Error decoding QR code: $e');
       return const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -97,7 +98,7 @@ class _RedTicketsPageState extends State<RedTicketsPage> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _loadTickets,
           ),
         ],
@@ -143,7 +144,7 @@ class _RedTicketsPageState extends State<RedTicketsPage> {
             ),
             Expanded(
               child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: Colors.red))
                 : activeTickets.isEmpty
                   ? Center(
                       child: Column(
@@ -258,6 +259,14 @@ class _RedTicketsPageState extends State<RedTicketsPage> {
                                                         ],
                                                       ),
                                                       child: _buildQRImage(ticket['qr_code_url']),
+                                                    ),
+                                                    const SizedBox(height: 20),
+                                                    Text(
+                                                      'Ticket #${ticket['ticket_number']}',
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        color: Colors.grey,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),

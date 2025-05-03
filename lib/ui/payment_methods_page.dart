@@ -38,7 +38,13 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Payment Methods'),
+        title: Text('Payment Methods', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+        bottom: Radius.circular(20),
+          ),
+        ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -56,7 +62,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
   }
 
   Widget _buildPaymentMethodItem(Map<String, dynamic> method) {
-    return Card(
+    return Card(color: Colors.deepPurple,shadowColor: Colors.indigoAccent[300],
       margin: EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
@@ -65,14 +71,14 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         contentPadding: EdgeInsets.all(16),
         leading: Icon(
           _getPaymentMethodIcon(method['payment_type']), // Updated field name
-          color: Colors.blue,
+          color: Colors.white,
           size: 32,
         ),
         title: Text(
           method['name'] ?? 'Payment Method',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 16,color: Colors.white
           ),
         ),
         subtitle: Column(
@@ -80,7 +86,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
           children: [
             Text(
               '${method['card_brand']} **** ${method['card_last4']}',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.grey[50]),
             ),
             
             if (method['is_default'] == true)
@@ -393,9 +399,11 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
                         padding: EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
+                          
                         ),
                       ),
                       onPressed: () async {
@@ -456,7 +464,7 @@ child: isLoading
     ? CircularProgressIndicator(color: Colors.white)
     : Text(
         'Add Payment Method',
-        style: TextStyle(fontSize: 16),
+        style: TextStyle(fontSize: 16,color: Colors.white),
       ),
                     ),
                   ),

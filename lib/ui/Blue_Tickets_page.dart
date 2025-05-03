@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import '../services/ticket_service.dart';
 import 'dart:typed_data';
+import '../services/ticket_service.dart';
+
 class BlueTicketsPage extends StatefulWidget {
   @override
   _BlueTicketsPageState createState() => _BlueTicketsPageState();
@@ -17,21 +18,21 @@ class _BlueTicketsPageState extends State<BlueTicketsPage> {
     _loadTickets();
   }
 
-   Future<void> _loadTickets() async {
+  Future<void> _loadTickets() async {
     setState(() => isLoading = true);
     try {
       final response = await TicketService.getTickets();
-      print('Tickets response: $response'); // للتحقق من البيانات
+      print('Tickets response: $response');
 
       if (response['results'] != null) {
         final allTickets = response['results'] as List;
         setState(() {
           activeTickets = allTickets.where((ticket) => 
             ticket['ticket_type'] == 'VIP' && 
-            ticket['status'] == 'ACTIVE'
+            (ticket['status'] == 'ACTIVE' || ticket['status'] == 'IN_USE')
           ).toList();
         });
-        print('Found ${activeTickets.length} active blue tickets');
+        print('Found ${activeTickets.length} active/in-use blue tickets');
       }
     } catch (e) {
       print('Error loading tickets: $e');
@@ -51,6 +52,7 @@ class _BlueTicketsPageState extends State<BlueTicketsPage> {
         height: 200,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
+          print('Error loading QR code: $error');
           return const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -65,6 +67,7 @@ class _BlueTicketsPageState extends State<BlueTicketsPage> {
         },
       );
     } catch (e) {
+      print('Error decoding QR code: $e');
       return const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -95,7 +98,7 @@ class _BlueTicketsPageState extends State<BlueTicketsPage> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _loadTickets,
           ),
         ],
@@ -141,7 +144,7 @@ class _BlueTicketsPageState extends State<BlueTicketsPage> {
             ),
             Expanded(
               child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: Colors.blue))
                 : activeTickets.isEmpty
                   ? Center(
                       child: Column(
@@ -191,6 +194,14 @@ class _BlueTicketsPageState extends State<BlueTicketsPage> {
                                         ),
                                       ),
                                       const SizedBox(height: 8),
+                                      const Text(
+                                        'Unlimited stations',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
                                       Text(
                                         'Valid until: ${ticket['valid_until']?.split('T')[0] ?? 'N/A'}',
                                         style: const TextStyle(
@@ -248,6 +259,14 @@ class _BlueTicketsPageState extends State<BlueTicketsPage> {
                                                         ],
                                                       ),
                                                       child: _buildQRImage(ticket['qr_code_url']),
+                                                    ),
+                                                    const SizedBox(height: 20),
+                                                    Text(
+                                                      'Ticket #${ticket['ticket_number']}',
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        color: Colors.grey,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
