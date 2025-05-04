@@ -40,7 +40,7 @@ class _RedTicketsPageState extends State<RedTicketsPage> {
       setState(() => isLoading = false);
     }
   }
-
+/// Function to decode and display the QR code image
   Widget _buildQRImage(String base64String) {
     try {
       final String cleanBase64 = base64String.replaceAll(RegExp(r'data:image/\w+;base64,'), '');
