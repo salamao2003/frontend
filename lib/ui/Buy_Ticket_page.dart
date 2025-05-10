@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:egy_metro/cubit/ticket_data.dart';
 import 'package:egy_metro/cubit/buy_ticket_logic.dart';
+import 'package:egy_metro/cubit/wallet_logic.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BuyTicketPage extends StatefulWidget {
@@ -102,14 +103,41 @@ class _BuyTicketPageState extends State<BuyTicketPage> {
       Navigator.pop(context);
 
       if (result['success']) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.green,
-          ),
-        );
+        // Get current balance after purchase
+        final walletDetails = await WalletLogic.getWalletDetails();
+        
+        if (walletDetails['success']) {
+          final currentBalance = walletDetails['data']['balance'];
+          
+          // Show success message with balance
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(result['message']),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Your balance now is: ${currentBalance.toStringAsFixed(2)} EGP',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        } else {
+          // Show only success message if balance fetch fails
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
 
         // Navigate back
         Navigator.pop(context);

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:egy_metro/ui/Buy_Ticket_page.dart';
+import 'package:egy_metro/ui/animated_page_transition.dart';
 
 class PlanPage extends StatelessWidget {
   final String time;
@@ -67,6 +69,30 @@ Widget build(BuildContext context) {
                   const SizedBox(height: 160),
                   _buildInterchangesSection(),
                   const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      navigateWithAnimation(
+                        context,
+                        BuyTicketPage() , // You'll need to create this page
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "Buy Your Ticket Now!",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
