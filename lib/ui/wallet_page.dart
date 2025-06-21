@@ -230,7 +230,7 @@ class _WalletPageState extends State<WalletPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add_circle_outline, size: 20),
+                Icon(Icons.add_circle_outline, size: 20, color: Colors.white),
                 SizedBox(width: 8),
                 Text(
                   'Add Funds',
@@ -263,7 +263,7 @@ class _WalletPageState extends State<WalletPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.payment, size: 20),
+                Icon(Icons.payment, size: 20, color: Colors.white),
                 SizedBox(width: 8),
                 Text(
                   'Methods',

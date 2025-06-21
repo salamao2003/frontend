@@ -20,17 +20,24 @@ class _MyAccountPageState extends State<MyAccountPage> {
   bool _isEditing = false;
   String? _error;
   String _firstName = '';
+  String _username = '';  // إضافة username
+  String _nationalId = ''; // إضافة national_id
   bool _isAuthenticated = false;
 
   late TextEditingController _emailController;
-late TextEditingController _firstNameController;  // إضافة
-  late TextEditingController _lastNameController;   // إضافة
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _usernameController;   // إضافة controller للـ username
+  late TextEditingController _nationalIdController; // إضافة controller للـ national_id
+
   @override
   void initState() {
     super.initState();
     _emailController = TextEditingController();
-    _firstNameController = TextEditingController();  // إضافة
-    _lastNameController = TextEditingController();   // إضافة
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _usernameController = TextEditingController();     // تهيئة الـ controller
+    _nationalIdController = TextEditingController();   // تهيئة الـ controller
     _checkAuthAndLoadProfile();
   }
 
@@ -68,156 +75,100 @@ late TextEditingController _firstNameController;  // إضافة
   }
 
   Future<void> _loadUserProfile() async {
-
     try {
-
       setState(() => _isLoading = true);
-
       final userData = await _userService.getUserProfile();
-
       
-
       // حفظ البيانات في SharedPreferences
-
       final prefs = await SharedPreferences.getInstance();
-
       await prefs.setString('user_profile', json.encode(userData));
 
-
       setState(() {
-
         _firstName = userData['first_name'] ?? '';
-
+        _username = userData['username'] ?? '';           // إضافة username
+        _nationalId = userData['national_id'] ?? '';       // إضافة national_id
+        
         _firstNameController.text = userData['first_name'] ?? '';
-
         _lastNameController.text = userData['last_name'] ?? '';
-
         _emailController.text = userData['email'] ?? '';
-
+        _usernameController.text = userData['username'] ?? '';     // تعيين القيمة
+        _nationalIdController.text = userData['national_id'] ?? ''; // تعيين القيمة
         _error = null;
-
       });
-
     } catch (e) {
-
       // محاولة استخدام البيانات المخزنة محلياً إذا فشل الاتصال بالسيرفر
-
       try {
-
         final storedData = await _userService.getStoredProfile();
-
         setState(() {
-
           _firstName = storedData['first_name'] ?? '';
-
+          _username = storedData['username'] ?? '';           // إضافة username
+          _nationalId = storedData['national_id'] ?? '';       // إضافة national_id
+          
           _firstNameController.text = storedData['first_name'] ?? '';
-
           _lastNameController.text = storedData['last_name'] ?? '';
-
           _emailController.text = storedData['email'] ?? '';
-
+          _usernameController.text = storedData['username'] ?? '';     // تعيين القيمة
+          _nationalIdController.text = storedData['national_id'] ?? ''; // تعيين القيمة
           _error = null;
-
         });
-
       } catch (storageError) {
-
         setState(() => _error = e.toString());
-
       }
-
     } finally {
-
       setState(() => _isLoading = false);
-
     }
-
   }
 
-   Future<void> _updateProfile() async {
-
+  Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-
     try {
-
       setState(() => _isLoading = true);
-
       final updatedData = await _userService.updateProfile(
-
         email: _emailController.text,
-
         firstName: _firstNameController.text,
-
         lastName: _lastNameController.text,
-
       );
 
-
       setState(() {
-
         _firstName = updatedData['first_name'] ?? '';
-
+        _username = updatedData['username'] ?? _username;           // الحفاظ على القيمة الحالية إذا لم تتغير
+        _nationalId = updatedData['national_id'] ?? _nationalId;     // الحفاظ على القيمة الحالية إذا لم تتغير
+        
         _firstNameController.text = updatedData['first_name'] ?? '';
-
         _lastNameController.text = updatedData['last_name'] ?? '';
-
         _emailController.text = updatedData['email'] ?? '';
-
+        _usernameController.text = updatedData['username'] ?? _username;
+        _nationalIdController.text = updatedData['national_id'] ?? _nationalId;
         _isEditing = false;
-
         _error = null;
-
       });
 
-
       if (mounted) {
-
         ScaffoldMessenger.of(context).showSnackBar(
-
           const SnackBar(
-
             content: Text('Profile updated successfully'),
-
             backgroundColor: Colors.green,
-
             behavior: SnackBarBehavior.floating,
-
           ),
-
         );
-
       }
-
     } catch (e) {
-
       setState(() => _error = e.toString());
-
       if (mounted) {
-
         ScaffoldMessenger.of(context).showSnackBar(
-
           SnackBar(
-
             content: Text('Error updating profile: ${e.toString()}'),
-
             backgroundColor: Colors.red,
-
             behavior: SnackBarBehavior.floating,
-
           ),
-
         );
-
       }
-
     } finally {
-
       setState(() => _isLoading = false);
-
     }
-
   }
+
   Future<void> _logout() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -356,7 +307,6 @@ late TextEditingController _firstNameController;  // إضافة
                 _buildProfileHeader(),
                 const SizedBox(height: 24),
                 _buildProfileForm(),
-                
               ],
             ),
           ),
@@ -366,79 +316,89 @@ late TextEditingController _firstNameController;  // إضافة
   }
 
   Widget _buildProfileHeader() {
-  return Center( // إضافة Center widget
-    child: Container(
-      width: MediaQuery.of(context).size.width * 0.9, // تحديد عرض المستطيل
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.blue[600]!,
-            Colors.blue[400]!,
+    return Center(
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.blue[600]!,
+              Colors.blue[400]!,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.3),
+              spreadRadius: 2,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // إضافة محاذاة للمنتصف عمودياً
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              border: Border.all(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 color: Colors.white,
-                width: 4,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 2,
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+                border: Border.all(
+                  color: Colors.white,
+                  width: 4,
                 ),
-              ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.person_rounded,
+                size: 60,
+                color: Colors.blue[600],
+              ),
             ),
-            child: Icon(
-              Icons.person_rounded,
-              size: 60,
-              color: Colors.blue[600],
+            const SizedBox(height: 16),
+            Text(
+              _firstName,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _firstName,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+            const SizedBox(height: 8),
+            // إضافة عرض الـ username
+            Text(
+              '@$_username',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white.withOpacity(0.9),
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _emailController.text,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withOpacity(0.9),
+            const SizedBox(height: 4),
+            Text(
+              _emailController.text,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white.withOpacity(0.8),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildProfileForm() {
     return Container(
@@ -501,6 +461,24 @@ late TextEditingController _firstNameController;  // إضافة
               enabled: _isEditing,
               icon: Icons.email_rounded,
               keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            // إضافة حقل الـ Username (غير قابل للتعديل)
+            _buildProfileField(
+              label: 'Username',
+              controller: _usernameController,
+              enabled: false, // دائماً غير قابل للتعديل
+              icon: Icons.alternate_email_rounded,
+              keyboardType: TextInputType.text,
+            ),
+            const SizedBox(height: 16),
+            // إضافة حقل الـ National ID (غير قابل للتعديل)
+            _buildProfileField(
+              label: 'National ID',
+              controller: _nationalIdController,
+              enabled: false, // دائماً غير قابل للتعديل
+              icon: Icons.badge_rounded,
+              keyboardType: TextInputType.number,
             ),
           ],
         ),
@@ -568,8 +546,10 @@ late TextEditingController _firstNameController;  // إضافة
   @override
   void dispose() {
     _emailController.dispose(); 
-     _firstNameController.dispose();  // إضافة
-    _lastNameController.dispose();   // إضافة
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _usernameController.dispose();     // إضافة dispose
+    _nationalIdController.dispose();   // إضافة dispose
     super.dispose();
   }
 }

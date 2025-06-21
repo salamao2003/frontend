@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'Recommend_subscription.dart'; // إضافة الاستيراد
 
 class SubscriptionPage extends StatelessWidget {
   // إضافة دالة للتعامل مع API الاشتراكات
@@ -123,9 +124,31 @@ class SubscriptionPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              // في دالة build، داخل Column نعدل الكروت كالتالي:
-
+              // إضافة اللينك هنا
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecommendSubscriptionPage(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "To know your region, visit recommendation page",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.blue[700],
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // الكروت الموجودة
 _buildSubscriptionCard(
   context: context,
   title: "Basic Plan",
@@ -329,37 +352,6 @@ _buildSubscriptionCard(
               ],
             ),
           ),
-          if (isPopular)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.purple,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.star,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      "POPULAR",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );

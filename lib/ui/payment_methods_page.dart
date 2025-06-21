@@ -150,8 +150,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         return Icons.credit_card;
       case 'DEBIT_CARD':
         return Icons.credit_card;
-      case 'FAWRY':
-        return Icons.account_balance;
       default:
         return Icons.payment;
     }
@@ -258,7 +256,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                     items: [
                       'CREDIT_CARD',
                       'DEBIT_CARD', 
-                      'FAWRY',
                     ].map((type) {
                       return DropdownMenuItem(
                         value: type,

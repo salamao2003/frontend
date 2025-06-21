@@ -70,13 +70,12 @@ class _LoginPageState extends State<LoginPage> {
                     _buildWelcomeText(),
                     const SizedBox(height: 40),
                     _buildLoginForm(),
-                    const SizedBox(height: 20),
-                    _buildForgotPassword(),
+                    
                     const SizedBox(height: 30),
                     _buildLoginButton(),
                     const SizedBox(height: 30),
                     _buildSignUpLink(),
-                    const SizedBox(height: 120),
+                    const SizedBox(height: 180),
                   ],
                 ),
               ),
@@ -133,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
       ],
     );
   }
-    Widget _buildLoginForm() {
+  Widget _buildLoginForm() {
     return Column(
       children: [
         // Email Field
@@ -158,34 +157,6 @@ class _LoginPageState extends State<LoginPage> {
           },
         ),
         const SizedBox(height: 16),
-        // Remember Me Checkbox
-        Row(
-          children: [
-            SizedBox(
-              height: 24,
-              width: 24,
-              child: Checkbox(
-                value: rememberMe,
-                onChanged: (value) {
-                  setState(() {
-                    rememberMe = value ?? false;
-                  });
-                },
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              "Remember me",
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -239,21 +210,6 @@ class _LoginPageState extends State<LoginPage> {
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.all(16),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildForgotPassword() {
-    return GestureDetector(
-      onTap: () => navigateWithAnimation(context, ForgotPasswordPage()),
-      child: Text(
-        "Forgot Password?",
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.blue[700],
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
         ),
       ),
     );
